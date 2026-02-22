@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>開発相談ナビ — 岡崎市 市街化調整区域 v8</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif; background: #F3F4F6; }
+  #root { max-width: 520px; margin: 0 auto; min-height: 100vh; }
+</style>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.26.9/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useRef, useEffect } = React;
+
+
+// ============================================================
+// DATA
+// ============================================================
+const PROVISIONS = {
+  FARM_HOUSE: { label: "農家住宅（許可不要）", law: "法29条1項2号", color: "#16a34a", icon: "🌾" },
+  BUNKE: { label: "分家住宅", law: "条例別表1項", color: "#2563eb", icon: "👨‍👩‍👧" },
+  SELF_USE: { label: "既存集落内の自己用住宅", law: "条例別表6項", color: "#2563eb", icon: "🏡" },
+  SELF_USE_LARGE: { label: "大規模既存集落の自己用住宅", law: "条例別表6項", color: "#2563eb", icon: "🏘️" },
+  EXISTING_LOT: { label: "既存の宅地における開発行為", law: "条例別表14項", color: "#7c3aed", icon: "📜" },
+  NUKADA: { label: "額田地域の指定区域", law: "法34条11号", color: "#0891b2", icon: "🗺️" },
+  EXPANSION: { label: "既存住宅の敷地拡大", law: "条例別表12項", color: "#ea580c", icon: "📐" },
+  USE_CHANGE_H: { label: "住宅の用途変更", law: "条例別表13項", color: "#ea580c", icon: "🔄" },
+  USE_CHANGE_B: { label: "業務用建築物の用途変更", law: "条例別表17項", color: "#ea580c", icon: "🔄" },
+  DAILY_SHOP: { label: "日常生活のため必要な店舗", law: "法34条1号", color: "#d97706", icon: "🛒" },
+  ROADSIDE: { label: "沿道施設", law: "法34条9号", color: "#d97706", icon: "🛣️" },
+  FACTORY_EX: { label: "既存工場の拡張", law: "条例別表7項", color: "#dc2626", icon: "🏭" },
+  SMALL_FACTORY: { label: "小規模工場等", law: "条例別表9項", color: "#dc2626", icon: "🏗️" },
+  INDUSTRY_ZONE: { label: "産業立地誘導地区", law: "条例30条2項", color: "#dc2626", icon: "🏭" },
+  WELFARE_DAY: { label: "公益上必要な建築物（通所系）", law: "法34条1号", color: "#be185d", icon: "🏥" },
+  WELFARE_RES: { label: "公共公益施設（入所系）", law: "条例別表16項", color: "#be185d", icon: "🏨" },
+  WELFARE_CONSULT: { label: "福祉施設（個別判定要）", law: "法34条1号/条例別表16項", color: "#be185d", icon: "♿" },
+  TABLE_CONSULT: { label: "別表該当性（窓口確認要）", law: "法34条1号/9号/条例別表13項", color: "#b45309", icon: "📋" },
+  COMPANY_HOUSE: { label: "事業所の社宅・寄宿舎", law: "条例別表3項", color: "#6366f1", icon: "🏢" },
+  LOGISTICS: { label: "流通業務施設", law: "法34条14号(審8)", color: "#64748b", icon: "🚛" },
+  REVIEW_BOARD: { label: "開発審査会案件", law: "法34条14号", color: "#64748b", icon: "📋" },
+  NO_PERMIT: { label: "許可不要（同一業種変更）", law: "—", color: "#16a34a", icon: "✅" },
+  URBAN_PERMIT: { label: "市街化区域の開発許可", law: "法29条1項", color: "#0369a1", icon: "🏙️" },
+};
+
+// ★ v7: 精査済み確認方法テンプレート（わが街ガイド統一、受付時間追加）
+const HOW_TO_CHECK = {
+  AREA: {
+    title: "区域区分の確認方法",
+    items: [
+      { icon: "💻", method: "岡崎市わが街ガイド（都市計画情報）", detail: "用途地域・市街化区域/調整区域をオンラインで24時間確認可能", url: "https://www2.wagmap.jp/okazakicity/Portal" },
+      { icon: "🏛️", method: "建築指導課窓口（市役所西庁舎1F）", detail: "受付：月〜金 8:30〜12:00｜都市計画図で正確な境界を確認" },
+      { icon: "📝", method: "建築事前調査票", detail: "建築指導課窓口で記入時に併せて確認" },
+      { icon: "📄", method: "固定資産税の課税明細書", detail: "参考程度。正確な境界はわが街ガイドまたは窓口で確認を推奨" },
+    ],
+  },
+  LAND_OWNERSHIP: {
+    title: "土地の所有時期の確認方法",
+    items: [
+      { icon: "📜", method: "登記事項証明書「甲区」欄", detail: "受付年月日を確認。相続の場合は被相続人の取得日が基準" },
+      { icon: "🏛️", method: "名古屋法務局 岡崎支局", detail: "窓口600円／オンライン332円で取得可能" },
+    ],
+  },
+  CLUSTER: {
+    title: "連たん戸数の確認方法",
+    note: "※連たん戸数はオンラインでは確認できません。窓口での確認が必要です。",
+    items: [
+      { icon: "🏛️", method: "建築指導課窓口（市役所西庁舎1F）", detail: "受付：月〜金 8:30〜12:00｜航空写真・都市計画図で判定" },
+      { icon: "🗺️", method: "大規模既存集落の一覧", detail: "建築指導課に一覧表あり（180戸以上の集落リスト）" },
+    ],
+  },
+  EXISTING_LOT: {
+    title: "既存宅地の確認方法",
+    items: [
+      { icon: "🏛️", method: "建築指導課窓口（市役所西庁舎1F）", detail: "受付：月〜金 8:30〜12:00｜課税台帳の地目履歴で線引き前の地目を確認" },
+      { icon: "💻", method: "岡崎市わが街ガイド（過年度航空写真）", detail: "線引き当時の土地利用状況を航空写真で参考確認", url: "https://www2.wagmap.jp/okazakicity/Portal" },
+    ],
+  },
+  NUKADA: {
+    title: "額田地域・指定区域の確認方法",
+    note: "※指定区域図はオンラインでは確認できません。窓口での確認が必要です。",
+    items: [
+      { icon: "🏛️", method: "建築指導課窓口（市役所西庁舎1F）", detail: "受付：月〜金 8:30〜12:00｜区域図（告示第228号）で確認" },
+    ],
+  },
+  HAZARD: {
+    title: "災害ハザードエリアの確認方法",
+    items: [
+      { icon: "💻", method: "岡崎市わが街ガイド（防災情報）", detail: "急傾斜地崩壊危険箇所・土石流危険渓流・浸水想定区域を地図上で確認", url: "https://www2.wagmap.jp/okazakicity/Portal" },
+      { icon: "💻", method: "愛知県マップあいち", detail: "土砂災害警戒区域・特別警戒区域の最新指定状況を確認", url: "https://maps.pref.aichi.jp/aichimapai/" },
+      { icon: "🏛️", method: "建築指導課窓口（市役所西庁舎1F）", detail: "受付：月〜金 8:30〜12:00｜各種指定状況を一括確認" },
+    ],
+  },
+  INDUSTRY_ZONE: {
+    title: "産業立地誘導地区の確認方法",
+    note: "※産業立地誘導地区はオンラインでは確認できません。窓口での確認が必要です。",
+    items: [
+      { icon: "🏛️", method: "建築指導課窓口（市役所西庁舎1F）", detail: "受付：月〜金 8:30〜12:00｜指定区域図で確認" },
+    ],
+  },
+  RESIDENCE: {
+    title: "居住歴の確認方法",
+    items: [
+      { icon: "📄", method: "住民票の除票", detail: "市民課窓口で取得。過去の住所履歴を確認" },
+      { icon: "📜", method: "戸籍の附票", detail: "本籍地の市区町村で取得。住所の移り変わりを証明" },
+    ],
+  },
+};
+
+const STEPS = {
+  // ===== P1 エリア =====
+  P1_AREA: { id:"P1_AREA", phase:"エリア判定", lawTag:"法7条",
+    question:"建築予定地はどの区域ですか？",
+    options:[
+      { label:"市街化区域", next:"P1U_CHANGE", icon:"🏙️", law:"法7条2項", desc:"既に市街地を形成、または計画的に市街化を促進する区域" },
+      { label:"市街化調整区域", next:"P2_PURPOSE", icon:"🌾", law:"法7条3項", desc:"市街化を抑制する区域" },
+      { label:"未確認・わからない", next:"CHECK_AREA", icon:"❓", desc:"確認方法をご案内します" },
+    ],
+  },
+  CHECK_AREA: { id:"CHECK_AREA", phase:"エリア判定", type:"check", howTo:"AREA",
+    question:"区域区分を確認してから選択してください",
+    options:[
+      { label:"市街化区域", next:"P1U_CHANGE", icon:"🏙️", law:"法7条2項" },
+      { label:"市街化調整区域", next:"P2_PURPOSE", icon:"🌾", law:"法7条3項" },
+    ],
+  },
+  P1U_CHANGE: { id:"P1U_CHANGE", phase:"エリア判定", lawTag:"法29条1項",
+    question:"区画形質の変更を行いますか？",
+    help:"「区画形質の変更」＝切土・盛土による造成、道路・水路等の付替え、敷地の分割・統合など。単なる建替え（造成なし）は該当しません。",
+    options:[
+      { label:"変更を行う", next:"P1U_SIZE", icon:"⛏️", law:"法29条1項", desc:"切土・盛土・道路付替え・敷地分割など" },
+      { label:"変更しない", next:"R_URB_NO", icon:"🏠", desc:"建替えなど造成を伴わない場合" },
+    ],
+  },
+  P1U_SIZE: { id:"P1U_SIZE", phase:"エリア判定", lawTag:"令19条1項",
+    question:"開発面積は500㎡以上ですか？",
+    help:"岡崎市の市街化区域における規模要件：500㎡ ※分割しても合算されます",
+    options:[
+      { label:"500㎡以上", next:"P1U_GRADE", icon:"📐", law:"令19条1項" },
+      { label:"500㎡未満", next:"R_URB_NO", icon:"▫️" },
+    ],
+  },
+  P1U_GRADE: { id:"P1U_GRADE", phase:"エリア判定", lawTag:"法29条1項",
+    question:"切盛30cm超 or 公共施設の新設・変更を伴いますか？",
+    options:[
+      { label:"はい", next:"R_URB_YES", icon:"⚠️", law:"法29条1項", desc:"切盛30cm超 or 公共施設築造" },
+      { label:"いいえ", next:"R_URB_NO", icon:"✅" },
+    ],
+  },
+  R_URB_YES: { id:"R_URB_YES", phase:"結果", type:"result", provision:"URBAN_PERMIT", lawTag:"法29条1項",
+    title:"市街化区域 — 開発許可が必要です",
+    message:"市街化区域内で500㎡以上の開発行為（区画形質の変更を伴うもの）は、法29条に基づく開発許可が必要です。法33条の技術基準（道路・排水・公園等）に適合する必要があります。",
+    nextSteps:["法32条に基づく協議先（道路課・下水道建設課・消防本部等）との事前協議","開発許可申請書の作成・提出","許可取得後に建築確認申請へ"],
+  },
+  R_URB_NO: { id:"R_URB_NO", phase:"結果", type:"result", provision:null, lawTag:"—",
+    title:"市街化区域 — 開発許可は不要です",
+    message:"開発行為に該当しない、または規模要件（500㎡）未満のため、開発許可は不要です。用途地域の制限に従い建築確認申請へ進んでください。",
+    nextSteps:["用途地域・建蔽率・容積率・高さ制限等を建築指導課で確認","建築確認申請へ"],
+  },
+  // ===== P2 目的 =====
+  P2_PURPOSE: { id:"P2_PURPOSE", phase:"目的確認", lawTag:"法34条",
+    question:"この土地で何をしたいですか？",
+    options:[
+      { label:"住宅を建てたい", next:"P2_HOUSE", icon:"🏠", desc:"自己用住宅・分家住宅・社宅など" },
+      { label:"店舗・飲食店", next:"P3S_TYPE", icon:"🏪", desc:"コンビニ・飲食店・理美容など" },
+      { label:"工場・倉庫・事務所", next:"P3I_TYPE", icon:"🏭", desc:"製造業・物流・オフィスなど" },
+      { label:"福祉・医療施設", next:"P3W_TYPE", icon:"🏥", desc:"デイサービス・特養・診療所など" },
+      { label:"用途変更", next:"P3C_TYPE", icon:"🔄", desc:"既存建物の使い方を変えたい" },
+      { label:"増築・敷地拡大", next:"P3E_TYPE", icon:"📐", desc:"既存建物の増築や敷地を広げたい" },
+    ],
+  },
+  P2_HOUSE: { id:"P2_HOUSE", phase:"目的確認", lawTag:"—",
+    question:"どんな住宅を建てますか？",
+    options:[
+      { label:"自分で住む家", next:"P3H_FARMER", icon:"🏡", desc:"自己居住用住宅（新築）" },
+      { label:"分家住宅", next:"P3B_HONKE", icon:"👨‍👩‍👧", law:"条例別表1項", desc:"本家からの世帯分化" },
+      { label:"社宅・従業員寮", next:"P4_COMP", icon:"🏢", law:"条例別表3項" },
+      { label:"賃貸住宅・アパート", next:"P3H_RENTAL", icon:"🏘️", desc:"自己居住用以外" },
+    ],
+  },
+  // ===== P3H 住宅 =====
+  P3H_FARMER: { id:"P3H_FARMER", phase:"属性判定", lawTag:"法29条1項2号",
+    question:"農林漁業が主たる職業ですか？",
+    help:"農業委員会の農業従事者証明の交付対象者であるかどうか",
+    options:[
+      { label:"はい", next:"P4_FARM", icon:"🌾", law:"法29条1項2号", desc:"農林漁業が主たる業" },
+      { label:"いいえ", next:"P3H_LAND", icon:"👤", desc:"農林漁業従事者ではない" },
+    ],
+  },
+  P4_FARM: { id:"P4_FARM", phase:"定量判定", lawTag:"農地法4条/5条",
+    question:"建築予定地は農地（田・畑）ですか？",
+    help:"登記事項証明書の「地目」欄、または固定資産課税台帳で確認",
+    options:[
+      { label:"農地", next:"R_FARM_A", icon:"🌱", law:"農地法4条/5条", desc:"田・畑 → 転用許可が別途必要" },
+      { label:"農地以外", next:"R_FARM_N", icon:"🏡", desc:"宅地・山林・雑種地等" },
+    ],
+  },
+  R_FARM_A: { id:"R_FARM_A", phase:"結果", type:"result", provision:"FARM_HOUSE", lawTag:"法29条1項2号",
+    title:"農家住宅（開発許可不要）＋ 農地転用許可が必要",
+    message:"農林漁業従事者の自己居住用住宅は開発許可不要（法29条1項2号）。ただし農地のため農地法に基づく転用許可が別途必要です。",
+    nextSteps:["農業委員会で「農業従事者証明」を取得","農地転用許可（農地法4条/5条）を申請","転用許可後に建築確認申請へ"],
+  },
+  R_FARM_N: { id:"R_FARM_N", phase:"結果", type:"result", provision:"FARM_HOUSE", lawTag:"法29条1項2号",
+    title:"農家住宅として建築可能（開発許可不要）",
+    message:"農林漁業従事者の自己居住用住宅は開発許可不要（法29条1項2号）。届出のみで建築確認申請に進めます。",
+    nextSteps:["農業委員会で「農業従事者証明」を取得","建築指導課へ届出","建築確認申請へ"],
+  },
+  P3H_LAND: { id:"P3H_LAND", phase:"属性判定", lawTag:"条例別表6項",
+    question:"線引き前（S45.11.24）から所有している土地ですか？",
+    options:[
+      { label:"線引き前から所有", next:"P3H_C45", icon:"✅", law:"条例別表6項", desc:"S45.11.24より前に取得" },
+      { label:"線引き後に取得", next:"P3H_LC", icon:"📅", desc:"S45.11.24以降に取得" },
+      { label:"未確認", next:"CHECK_LAND", icon:"❓", desc:"確認方法をご案内します" },
+    ],
+  },
+  CHECK_LAND: { id:"CHECK_LAND", phase:"属性判定", type:"check", howTo:"LAND_OWNERSHIP",
+    question:"土地の所有時期を確認してから選択してください",
+    options:[
+      { label:"線引き前から所有", next:"P3H_C45", icon:"✅", law:"条例別表6項" },
+      { label:"線引き後に取得", next:"P3H_LC", icon:"📅" },
+    ],
+  },
+  P3H_C45: { id:"P3H_C45", phase:"属性判定", lawTag:"条例別表6項",
+    question:"45戸以上の建物が連たんしていますか？",
+    help:"建築面積30㎡以上の建物が敷地相互間100m以内で45戸以上",
+    options:[
+      { label:"45戸以上", next:"P3H_ALT", icon:"🏘️", law:"条例別表6項" },
+      { label:"45戸未満", next:"P3H_NUKADA", icon:"🌳" },
+      { label:"未確認", next:"CHECK_CLUSTER", icon:"❓", desc:"確認方法をご案内します" },
+    ],
+  },
+  CHECK_CLUSTER: { id:"CHECK_CLUSTER", phase:"属性判定", type:"check", howTo:"CLUSTER",
+    question:"連たん戸数を確認してから選択してください",
+    options:[
+      { label:"45戸以上", next:"P3H_ALT", icon:"🏘️", law:"条例別表6項" },
+      { label:"45戸未満", next:"P3H_NUKADA", icon:"🌳" },
+    ],
+  },
+  P3H_ALT: { id:"P3H_ALT", phase:"属性判定", lawTag:"条例別表6項",
+    question:"市街化区域内に宅地を所有していますか？",
+    help:"条例別表6項：「市街化区域内に代替地を所有していないこと」\n申請者本人・配偶者名義が対象",
+    options:[
+      { label:"所有していない", next:"P3H_NEED", icon:"❌", law:"条例別表6項" },
+      { label:"所有している", next:"P3H_HAS_ALT", icon:"⭕" },
+    ],
+  },
+  P3H_NEED: { id:"P3H_NEED", phase:"属性判定", lawTag:"条例別表6項",
+    question:"住宅を必要とする事情は？",
+    options:[
+      { label:"自己居住の必要あり", next:"P4_SELF", icon:"✅", law:"条例別表6項", desc:"手狭・老朽化・持家なし・結婚・Uターン等" },
+      { label:"投資・賃貸目的", next:"P3H_EX_LOT", icon:"💰", desc:"自己居住用でない" },
+    ],
+  },
+  P3H_HAS_ALT: { id:"P3H_HAS_ALT", phase:"属性判定", lawTag:"条例別表14項",
+    question:"代替地あり → 別表6項不適合。既存宅地を確認します。",
+    help:"既存宅地（条例別表14項）は代替地の有無を問いません。",
+    options:[
+      { label:"既存宅地の確認へ", next:"P3H_EX_LOT", icon:"→", law:"条例別表14項" },
+    ],
+  },
+  P3H_EX_LOT: { id:"P3H_EX_LOT", phase:"属性判定", lawTag:"条例別表14項",
+    question:"線引き前から宅地で、45戸以上の集落内ですか？",
+    options:[
+      { label:"はい", next:"P4_EX_LOT", icon:"✅", law:"条例別表14項", desc:"線引き前から宅地 かつ 45戸以上連たん" },
+      { label:"いいえ", next:"P3H_NUKADA", icon:"❌", desc:"上記を満たさない" },
+      { label:"未確認", next:"CHECK_EX_LOT", icon:"❓", desc:"確認方法をご案内します" },
+    ],
+  },
+  CHECK_EX_LOT: { id:"CHECK_EX_LOT", phase:"属性判定", type:"check", howTo:"EXISTING_LOT",
+    question:"既存宅地かどうかを確認してから選択してください",
+    options:[
+      { label:"はい", next:"P4_EX_LOT", icon:"✅", law:"条例別表14項" },
+      { label:"いいえ", next:"P3H_NUKADA", icon:"❌" },
+    ],
+  },
+  P3H_NUKADA: { id:"P3H_NUKADA", phase:"属性判定", lawTag:"法34条11号",
+    question:"額田地域の条例指定区域内ですか？",
+    options:[
+      { label:"指定区域内", next:"P4_NUKADA", icon:"🗺️", law:"法34条11号" },
+      { label:"指定区域外", next:"R_REVIEW", icon:"📍" },
+      { label:"未確認", next:"CHECK_NUKADA", icon:"❓", desc:"確認方法をご案内します" },
+    ],
+  },
+  CHECK_NUKADA: { id:"CHECK_NUKADA", phase:"属性判定", type:"check", howTo:"NUKADA",
+    question:"額田地域の指定区域を確認してから選択してください",
+    options:[
+      { label:"指定区域内", next:"P4_NUKADA", icon:"🗺️", law:"法34条11号" },
+      { label:"指定区域外", next:"R_REVIEW", icon:"📍" },
+    ],
+  },
+  R_REVIEW: { id:"R_REVIEW", phase:"結果", type:"result", provision:"REVIEW_BOARD", lawTag:"法34条14号",
+    title:"定型基準に非該当 — 開発審査会での個別審査の可能性",
+    message:"条例別表の定型基準に直接該当しませんが、法34条14号に基づき開発審査会で個別に審査される可能性があります。",
+    nextSteps:["建築指導課窓口（市役所西庁舎1F）で登記情報・建築計画を持参のうえ事前相談","「建築事前調査票」に記入して持参"],
+  },
+  P3H_LC: { id:"P3H_LC", phase:"属性判定", lawTag:"条例別表6項",
+    question:"大規模既存集落（180戸以上）に該当しますか？",
+    options:[
+      { label:"180戸以上", next:"P3H_LC_RES", icon:"🏙️", law:"条例別表6項", desc:"大規模既存集落" },
+      { label:"180戸未満", next:"P3H_EX_LOT", icon:"🏘️" },
+      { label:"未確認", next:"CHECK_CLUSTER", icon:"❓", desc:"確認方法をご案内します" },
+    ],
+  },
+  P3H_LC_RES: { id:"P3H_LC_RES", phase:"属性判定", lawTag:"条例別表6項",
+    question:"申請者（または親族）が線引き前からこの集落に居住していますか？",
+    help:"6親等内血族・配偶者・3親等内姻族が対象",
+    options:[
+      { label:"居住している", next:"P3H_LC_ALT", icon:"✅" },
+      { label:"居住していない", next:"P3H_EX_LOT", icon:"❌" },
+      { label:"未確認", next:"CHECK_RESIDENCE", icon:"❓", desc:"確認方法をご案内します" },
+    ],
+  },
+  CHECK_RESIDENCE: { id:"CHECK_RESIDENCE", phase:"属性判定", type:"check", howTo:"RESIDENCE",
+    question:"居住歴を確認してから選択してください",
+    options:[
+      { label:"居住している", next:"P3H_LC_ALT", icon:"✅" },
+      { label:"居住していない", next:"P3H_EX_LOT", icon:"❌" },
+    ],
+  },
+  P3H_LC_ALT: { id:"P3H_LC_ALT", phase:"属性判定", lawTag:"条例別表6項",
+    question:"市街化区域内に宅地を所有していますか？",
+    help:"申請者本人・配偶者名義",
+    options:[
+      { label:"所有していない", next:"P4_SELF_LG", icon:"❌", law:"条例別表6項" },
+      { label:"所有している", next:"P3H_EX_LOT", icon:"⭕" },
+    ],
+  },
+  P3H_RENTAL: { id:"P3H_RENTAL", phase:"属性判定", lawTag:"条例別表14項",
+    question:"賃貸住宅は「自己居住用」に該当しません。既存宅地を確認します。",
+    help:"条例別表14項は自己用の限定がないため賃貸住宅にも適用可能です。",
+    options:[
+      { label:"既存宅地の確認へ", next:"P3H_EX_LOT", icon:"→", law:"条例別表14項" },
+    ],
+  },
+  // ===== 分家 =====
+  P3B_HONKE: { id:"P3B_HONKE", phase:"属性判定", lawTag:"条例別表1項",
+    question:"本家の状況を確認してください",
+    help:"①本家が線引き(S45.11.24)前から調整区域に土地を所有、または\n②本家が線引き前から大規模既存集落(180戸以上)に居住",
+    options:[
+      { label:"①または②に該当", next:"P3B_APP", icon:"✅", law:"条例別表1項" },
+      { label:"いずれにも非該当", next:"P3B_ALT", icon:"❌" },
+      { label:"未確認", next:"CHECK_LAND", icon:"❓", desc:"確認方法をご案内します" },
+    ],
+  },
+  P3B_APP: { id:"P3B_APP", phase:"属性判定", lawTag:"条例別表1項",
+    question:"申請者要件をすべて確認してください",
+    conditions:[
+      "結婚等で新世帯を構成（予定含む）",
+      "市街化区域内に建築可能な宅地を未所有",
+      "本家の跡取りではない",
+    ],
+    options:[
+      { label:"すべて該当", next:"P4_BUNKE", icon:"✅", law:"条例別表1項" },
+      { label:"いずれかに非該当", next:"P3B_ALT", icon:"❌" },
+    ],
+  },
+  P3B_ALT: { id:"P3B_ALT", phase:"属性判定", lawTag:"—",
+    question:"分家住宅の要件不適合 — 代替基準を確認します",
+    options:[
+      { label:"自己用住宅へ", next:"P3H_LAND", icon:"🏡", law:"条例別表6項" },
+      { label:"既存宅地へ", next:"P3H_EX_LOT", icon:"📜", law:"条例別表14項" },
+      { label:"額田地域へ", next:"P3H_NUKADA", icon:"🗺️", law:"法34条11号" },
+    ],
+  },
+  // ===== 店舗 =====
+  P3S_TYPE: { id:"P3S_TYPE", phase:"属性判定", lawTag:"法34条1号/9号",
+    question:"店舗の業種を選択してください",
+    options:[
+      { label:"食料品・日用品・コンビニ", next:"P3S_LOC", icon:"🛒", law:"法34条1号" },
+      { label:"飲食店", next:"P3S_LOC", icon:"🍽️", law:"法34条1号", desc:"食堂・レストラン・喫茶店" },
+      { label:"サービス業", next:"P3S_LOC", icon:"💈", law:"法34条1号", desc:"理美容・クリーニング等" },
+      { label:"上記以外", next:"P3S_DIFF", icon:"🏬", desc:"専門店・大規模店舗等" },
+    ],
+  },
+  P3S_LOC: { id:"P3S_LOC", phase:"属性判定", lawTag:"法34条1号/9号",
+    question:"出店予定地の立地条件は？",
+    options:[
+      { label:"既存集落から50m以内", next:"P4_SHOP", icon:"🏘️", law:"法34条1号" },
+      { label:"幹線道路沿道", next:"P4_ROAD", icon:"🛣️", law:"法34条9号", desc:"市街化区域から道程1km以上" },
+      { label:"いずれにも非該当", next:"P3S_DIFF", icon:"📍" },
+    ],
+  },
+  P3S_DIFF: { id:"P3S_DIFF", phase:"属性判定", lawTag:"—",
+    question:"定型的な店舗基準に非該当",
+    options:[
+      { label:"既存建物あり → 用途変更", next:"P3C_TYPE", icon:"🔄", law:"条例別表13項/17項" },
+      { label:"既存建物なし → 審査会", next:"R_REVIEW", icon:"📋", law:"法34条14号" },
+    ],
+  },
+  // ===== 工場 =====
+  P3I_TYPE: { id:"P3I_TYPE", phase:"属性判定", lawTag:"—",
+    question:"どのような施設ですか？",
+    options:[
+      { label:"既存工場の拡張", next:"P4_FAC_EX", icon:"📐", law:"条例別表7項" },
+      { label:"新規の工場・事務所・倉庫", next:"P3I_LC", icon:"🏗️" },
+      { label:"幹線道路沿いの物流施設", next:"P4_LOGI", icon:"🚛", law:"審査会基準第8号" },
+    ],
+  },
+  P3I_LC: { id:"P3I_LC", phase:"属性判定", lawTag:"条例別表9項",
+    question:"大規模既存集落に線引き前から居住していますか？",
+    help:"本人or親族が対象",
+    options:[
+      { label:"該当する", next:"P4_SFAC", icon:"✅", law:"条例別表9項" },
+      { label:"非該当", next:"P3I_ZONE", icon:"❌" },
+      { label:"未確認", next:"CHECK_RESIDENCE", icon:"❓", desc:"確認方法をご案内します" },
+    ],
+  },
+  // ★ v7: 地区外に「審査会案件」選択肢を追加
+  P3I_ZONE: { id:"P3I_ZONE", phase:"属性判定", lawTag:"条例30条2項",
+    question:"産業立地誘導地区内ですか？",
+    options:[
+      { label:"地区内", next:"P4_INDZ", icon:"✅", law:"条例30条2項" },
+      { label:"地区外 → 物流施設の確認へ", next:"P4_LOGI", icon:"🚛", desc:"流通業務施設（審査会基準第8号）の要件を確認" },
+      { label:"地区外（物流施設でもない）", next:"R_REVIEW", icon:"📋", desc:"審査会での個別審査へ" },
+      { label:"未確認", next:"CHECK_IND_ZONE", icon:"❓", desc:"確認方法をご案内します" },
+    ],
+  },
+  CHECK_IND_ZONE: { id:"CHECK_IND_ZONE", phase:"属性判定", type:"check", howTo:"INDUSTRY_ZONE",
+    question:"産業立地誘導地区を確認してから選択してください",
+    options:[
+      { label:"地区内", next:"P4_INDZ", icon:"✅", law:"条例30条2項" },
+      { label:"地区外 → 物流施設の確認へ", next:"P4_LOGI", icon:"🚛" },
+      { label:"地区外（物流施設でもない）", next:"R_REVIEW", icon:"📋" },
+    ],
+  },
+  // ===== ★ v7: 福祉（分岐拡充） =====
+  P3W_TYPE: { id:"P3W_TYPE", phase:"属性判定", lawTag:"法34条1号/条例別表16項",
+    question:"施設の種類を選択してください",
+    options:[
+      { label:"通所系", next:"P4_WDAY", icon:"🏥", law:"法34条1号", desc:"デイサービス・診療所等" },
+      { label:"入所系（特養・認知症GH等）", next:"P4_WRES", icon:"🏨", law:"条例別表16項", desc:"特別養護老人ホーム・認知症対応型GH等" },
+      { label:"障がい福祉サービス", next:"R_WELFARE_CONSULT", icon:"♿", desc:"サービス類型により基準が異なるため窓口相談が必要" },
+      { label:"有料老人ホーム・老健施設", next:"R_WELFARE_CONSULT", icon:"🏠", desc:"条例別表8項/10項の別基準のため窓口相談が必要" },
+    ],
+  },
+  // ★ v7 新設：福祉施設の窓口誘導
+  R_WELFARE_CONSULT: { id:"R_WELFARE_CONSULT", phase:"結果", type:"result", provision:"WELFARE_CONSULT", lawTag:"法34条1号/条例別表16項",
+    title:"福祉施設 — サービス類型に応じた個別判定が必要",
+    message:"障がい福祉サービスや有料老人ホーム等は、サービスの類型（通所系・入所系・訪問系等）により適用される立地基準が異なります。一部のサービス（居宅介護・訪問系等）は原則立地不可のため、具体的な事業内容を持参のうえ窓口でご相談ください。",
+    nextSteps:["事業計画書（サービス種別・定員・面積等）を準備","建築指導課窓口（市役所西庁舎1F）で事前相談","障がい福祉課または介護保険課との事前協議が必要な場合あり"],
+  },
+  // ★ v8 新設：別表該当性判断の窓口誘導（店舗業種・沿道施設・用途変更先）
+  R_TABLE_CONSULT: { id:"R_TABLE_CONSULT", phase:"結果", type:"result", provision:"TABLE_CONSULT", lawTag:"法34条1号/9号/条例別表13項",
+    title:"業種・施設類型の該当性 — 窓口での確認が必要",
+    message:"ご計画の業種・施設が法令上の別表（別表第3＝店舗業種一覧、沿道施設の施設類型等）に該当するかどうかは、日本標準産業分類や個別の除外規定との照合が必要なため、窓口での確認をお勧めします。面積・高さ等の定量要件はシステムで事前確認できますが、業種の該当性判断は専門的な判断を伴います。",
+    nextSteps:["事業内容がわかる資料（業種・取扱商品・営業形態等）を準備","建築指導課窓口（市役所西庁舎1F・月〜金 8:30〜12:00）で事前相談","定量要件（面積・高さ）は本システムの結果を参考に事前確認を"],
+  },
+  // ===== 用途変更 =====
+  P3C_TYPE: { id:"P3C_TYPE", phase:"属性判定", lawTag:"条例別表13項/17項",
+    question:"現在の建物は何ですか？",
+    help:"適法建築（建築確認済証あり）かつ概ね10年以上適正利用が前提",
+    options:[
+      { label:"住宅", next:"P4_CH_H", icon:"🏠", law:"条例別表13項", desc:"空き家含む" },
+      { label:"事業用建物", next:"P4_CH_B", icon:"🏢", law:"条例別表17項", desc:"工場・店舗・事務所等" },
+    ],
+  },
+  // ===== 増改築 =====
+  P3E_TYPE: { id:"P3E_TYPE", phase:"属性判定", lawTag:"—",
+    question:"何を増改築しますか？",
+    options:[
+      { label:"住宅の敷地拡大", next:"P4_EXP_H", icon:"🏠", law:"条例別表12項" },
+      { label:"工場の拡張", next:"P4_FAC_EX", icon:"🏭", law:"条例別表7項" },
+      { label:"その他", next:"R_REVIEW", icon:"📋" },
+    ],
+  },
+  // ===== P4 定量 =====
+  P4_SELF: { id:"P4_SELF", phase:"定量判定", lawTag:"条例別表6項",
+    question:"以下の要件をすべて満たしていますか？",
+    conditions:["開発区域面積 500㎡以下","高さ 10m以下","共同建て・長屋建てでない"],
+    options:[
+      { label:"すべて適合", next:"P4_HAZ", icon:"✅", law:"条例別表6項", rp:"SELF_USE" },
+      { label:"面積超過", next:"P3H_EX_LOT", icon:"📐", desc:"500㎡超 → 既存宅地確認へ" },
+    ],
+  },
+  P4_SELF_LG: { id:"P4_SELF_LG", phase:"定量判定", lawTag:"条例別表6項",
+    question:"以下の要件をすべて満たしていますか？",
+    conditions:["開発区域面積 500㎡以下","高さ 10m以下","自己居住用であること"],
+    options:[
+      { label:"すべて適合", next:"P4_HAZ", icon:"✅", law:"条例別表6項", rp:"SELF_USE_LARGE" },
+      { label:"不適合", next:"P3H_EX_LOT", icon:"❌", desc:"既存宅地確認へ" },
+    ],
+  },
+  P4_EX_LOT: { id:"P4_EX_LOT", phase:"定量判定", lawTag:"条例別表14項",
+    question:"以下の要件をすべて満たしていますか？",
+    conditions:["開発区域面積 3,000㎡以下","高さ 10m以下"],
+    options:[
+      { label:"適合", next:"P4_HAZ", icon:"✅", law:"条例別表14項", rp:"EXISTING_LOT" },
+      { label:"不適合", next:"R_REVIEW", icon:"❌" },
+    ],
+  },
+  P4_BUNKE: { id:"P4_BUNKE", phase:"定量判定", lawTag:"条例別表1項",
+    question:"以下の要件をすべて満たしていますか？",
+    conditions:["開発区域面積 500㎡以下","高さ 10m以下"],
+    options:[
+      { label:"適合", next:"P4_HAZ", icon:"✅", law:"条例別表1項", rp:"BUNKE" },
+      { label:"不適合", next:"R_REVIEW", icon:"❌" },
+    ],
+  },
+  P4_NUKADA: { id:"P4_NUKADA", phase:"定量判定", lawTag:"法34条11号",
+    question:"以下の要件をすべて満たしていますか？",
+    conditions:["敷地面積 200㎡以上","高さ 10m以下","用途：建基法別表第2(い)項に該当"],
+    options:[
+      { label:"適合", next:"P4_HAZ", icon:"✅", law:"法34条11号", rp:"NUKADA" },
+      { label:"不適合", next:"R_REVIEW", icon:"❌" },
+    ],
+  },
+  // ★ v7: 別表第3の補足情報を追加
+  // ★ v8: 別表第3該当不明 → 窓口誘導を追加、業種一覧を拡充
+  P4_SHOP: { id:"P4_SHOP", phase:"定量判定", lawTag:"法34条1号",
+    question:"以下の要件をすべて満たしていますか？",
+    conditions:["開発区域面積 1,000㎡以下","延床面積 300㎡以下","高さ 10m以下","別表第3に掲げる業種であること（※下記の業種一覧を確認）","居住施設を含まないこと","共同建て及び長屋建てでないこと","風俗営業でないこと"],
+    conditionsNote:"※別表第3の業種一覧（大分類）：織物・衣服・身の回り品小売業 / 飲食料品小売業（コンビニ含む） / 機械器具小売業（自転車・電気） / その他の小売業（金物・薬局・燃料・書籍・花等） / 飲食店（食堂・レストラン・喫茶店） / 理容業・美容業・クリーニング / 学習塾 / はり・きゅう・柔道整復 / 郵便局 / 農業協同組合 / 自動車一般整備業 等。※製造業・カタログ販売・訪問販売・ネット販売主体は除外。業種の該当が不明な場合は窓口でご確認ください。",
+    options:[
+      { label:"すべて適合（業種が別表第3に該当）", next:"P4_HAZ", icon:"✅", law:"法34条1号", rp:"DAILY_SHOP" },
+      { label:"業種の該当が不明", next:"R_TABLE_CONSULT", icon:"❓", desc:"窓口で業種の該当性を確認" },
+      { label:"不適合", next:"P3S_DIFF", icon:"❌" },
+    ],
+  },
+  // ★ v8: 沿道施設の該当不明 → 窓口誘導を追加
+  P4_ROAD: { id:"P4_ROAD", phase:"定量判定", lawTag:"法34条9号",
+    question:"以下の要件をすべて満たしていますか？",
+    conditions:["開発区域面積 1,000㎡以下","高さ 10m以下","対象施設：ドライブイン・コンビニ（休憩施設併設）・給油所のいずれか","市街化区域から道程 1km以上","居住・宿泊施設を含まないこと"],
+    conditionsNote:"※コンビニは日本標準産業分類5631に限定。休憩施設（便所・机・座席4席以上）を併設すること。飲食店は客席30人以上で主としてアルコールを提供しないもの。給油所は板金・塗装併設不可。",
+    options:[
+      { label:"すべて適合", next:"P4_HAZ", icon:"✅", law:"法34条9号", rp:"ROADSIDE" },
+      { label:"施設類型の該当が不明", next:"R_TABLE_CONSULT", icon:"❓", desc:"窓口で施設類型を確認" },
+      { label:"不適合", next:"P3S_DIFF", icon:"❌" },
+    ],
+  },
+  P4_FAC_EX: { id:"P4_FAC_EX", phase:"定量判定", lawTag:"条例別表7項",
+    question:"以下の要件をすべて満たしていますか？",
+    conditions:["拡張面積 ≦ 既存敷地面積","拡張後の合計面積 1ha未満","既存敷地に隣接する土地であること","10年以上操業していること"],
+    options:[
+      { label:"適合", next:"P4_HAZ", icon:"✅", law:"条例別表7項", rp:"FACTORY_EX" },
+      { label:"不適合", next:"R_REVIEW", icon:"❌" },
+    ],
+  },
+  // ★ v7: 「市街化調整区域に」を明記
+  P4_SFAC: { id:"P4_SFAC", phase:"定量判定", lawTag:"条例別表9項",
+    question:"以下の要件をすべて満たしていますか？",
+    conditions:["開発区域面積 1,000㎡以下","店舗の場合 延床面積 500㎡以下","高さ 10m以下","市街化区域内に代替地を所有していない","市街化調整区域に同種の建物を所有していない","風俗営業でないこと"],
+    options:[
+      { label:"すべて適合", next:"P4_HAZ", icon:"✅", law:"条例別表9項", rp:"SMALL_FACTORY" },
+      { label:"不適合", next:"P3I_ZONE", icon:"❌", desc:"産業立地誘導地区確認へ" },
+    ],
+  },
+  P4_INDZ: { id:"P4_INDZ", phase:"定量判定", lawTag:"条例30条2項",
+    question:"以下の要件をすべて満たしていますか？",
+    conditions:["敷地面積 3,000㎡以上 5ha以下","用途：製造業・運輸業・卸売業"],
+    options:[
+      { label:"適合", next:"P4_HAZ", icon:"✅", law:"条例30条2項", rp:"INDUSTRY_ZONE" },
+      { label:"不適合", next:"P4_LOGI", icon:"❌", desc:"流通業務施設確認へ" },
+    ],
+  },
+  P4_LOGI: { id:"P4_LOGI", phase:"定量判定", lawTag:"法34条14号(審8)",
+    question:"以下の要件をすべて満たしていますか？",
+    conditions:["4車線以上の道路沿道 or IC5km圏内","敷地面積 3,000㎡以上 5ha以下"],
+    options:[
+      { label:"適合", next:"P4_HAZ", icon:"✅", law:"審査会基準第8号", rp:"LOGISTICS" },
+      { label:"不適合", next:"R_REVIEW", icon:"❌" },
+    ],
+  },
+  // ★ v7: 別表第2該当を追加、居住施設の表現修正、共同建て追加
+  // ★ v8: 別表第2該当不明 → 窓口誘導を追加
+  P4_WDAY: { id:"P4_WDAY", phase:"定量判定", lawTag:"法34条1号",
+    question:"以下の要件をすべて満たしていますか？",
+    conditions:["別表第2に掲げる施設に該当すること（※下記の施設一覧を確認）","既存集落から 100m以内","面積 2,000㎡以下（福祉）/ 1,000㎡以下（診療所）","高さ 10m以下","共同建て及び長屋建てでないこと","居住施設を含まないこと（宿直室除く）"],
+    conditionsNote:"※別表第2の主な施設：老人デイサービス、放課後等デイサービス、児童発達支援、生活介護、短期入所、小規模多機能型居宅介護、保育所（市立除く）、放課後児童クラブ、地域子育て支援拠点、一時預かり、助産施設、児童厚生施設、更生保護施設、身体障がい者福祉センター 等。上記に該当しない施設（訪問系・相談支援等）は原則立地不可。",
+    options:[
+      { label:"適合（施設が別表第2に該当）", next:"P4_HAZ", icon:"✅", law:"法34条1号", rp:"WELFARE_DAY" },
+      { label:"別表第2の該当が不明", next:"R_WELFARE_CONSULT", icon:"❓", desc:"施設種別の判断は窓口で確認が必要です" },
+      { label:"入所系施設", next:"P4_WRES", icon:"🏨", desc:"条例別表16項確認へ" },
+    ],
+  },
+  // ★ v8: 別表第4該当不明 → 窓口誘導を追加
+  P4_WRES: { id:"P4_WRES", phase:"定量判定", lawTag:"条例別表16項",
+    question:"以下の要件をすべて満たしていますか？",
+    conditions:["50戸以上連たん or 市街化区域から1km以内","別表第4の施設類型に該当すること（※下記の施設一覧を確認）","高さ 10m以下"],
+    conditionsNote:"※別表第4の主な施設：救護施設、更生施設、宿所提供施設、乳児院、母子生活支援施設、児童養護施設、児童心理治療施設、障がい児入所施設、養護老人ホーム、特別養護老人ホーム、軽費老人ホーム、認知症対応型GH、障がい者支援施設、障がい福祉サービス事業（別に定めるもの）、女性自立支援施設、幼保連携型認定こども園 等。",
+    options:[
+      { label:"適合（施設が別表第4に該当）", next:"P4_HAZ", icon:"✅", law:"条例別表16項", rp:"WELFARE_RES" },
+      { label:"別表第4の該当が不明", next:"R_WELFARE_CONSULT", icon:"❓", desc:"施設種別の判断は窓口で確認が必要です" },
+      { label:"不適合", next:"R_REVIEW", icon:"❌" },
+    ],
+  },
+  // ★ v8: 別表第3該当不明 → 窓口誘導を追加
+  P4_CH_H: { id:"P4_CH_H", phase:"定量判定", lawTag:"条例別表13項",
+    question:"以下の要件をすべて満たしていますか？",
+    conditions:["開発区域面積 500㎡以下","高さ 10m以下","適法建築（建築確認済証あり）＋概ね10年以上使用","変更先が別表第3に掲げる業種であること（※P4_SHOPと同じ業種一覧）","風俗営業でないこと"],
+    conditionsNote:"※住宅から店舗等への用途変更では、変更先の業種が別表第3に該当する必要があります。別表第3の業種一覧は日常店舗（P4_SHOP）と同一です。該当が不明な場合は窓口でご相談ください。",
+    options:[
+      { label:"適合", next:"P4_HAZ", icon:"✅", law:"条例別表13項", rp:"USE_CHANGE_H" },
+      { label:"変更先業種の該当が不明", next:"R_TABLE_CONSULT", icon:"❓", desc:"窓口で業種の該当性を確認" },
+      { label:"不適合", next:"R_REVIEW", icon:"❌" },
+    ],
+  },
+  // ★ v7: 「概ね10年以上」に統一
+  P4_CH_B: { id:"P4_CH_B", phase:"定量判定", lawTag:"条例別表17項",
+    question:"以下の要件をすべて満たしていますか？",
+    conditions:["面積 ≦ 従前の1.5倍 かつ 3,000㎡以下","高さ 10m以下","適法建築（建築確認済証あり）＋概ね10年以上使用","風俗営業でないこと"],
+    options:[
+      { label:"適合", next:"P4_HAZ", icon:"✅", law:"条例別表17項", rp:"USE_CHANGE_B" },
+      { label:"同一業種変更 → 許可不要", next:"R_NOPERM", icon:"🔓" },
+      { label:"不適合", next:"R_REVIEW", icon:"❌" },
+    ],
+  },
+  P4_EXP_H: { id:"P4_EXP_H", phase:"定量判定", lawTag:"条例別表12項",
+    question:"以下の要件をすべて満たしていますか？",
+    conditions:["拡大面積 500㎡以下","既存敷地に隣接する土地であること","やむを得ない事情があること"],
+    options:[
+      { label:"適合", next:"P4_HAZ", icon:"✅", law:"条例別表12項", rp:"EXPANSION" },
+      { label:"不適合", next:"R_REVIEW", icon:"❌" },
+    ],
+  },
+  P4_COMP: { id:"P4_COMP", phase:"定量判定", lawTag:"条例別表3項",
+    question:"以下の要件をすべて満たしていますか？",
+    conditions:["従業員 10人以上","事業所に隣接 or 1.5km以内の45戸集落内","開発区域面積 3,000㎡以下","高さ 10m以下","共同住宅・長屋・寄宿舎の形態であること"],
+    options:[
+      { label:"すべて適合", next:"P4_HAZ", icon:"✅", law:"条例別表3項", rp:"COMPANY_HOUSE" },
+      { label:"不適合", next:"R_REVIEW", icon:"❌" },
+    ],
+  },
+  // ===== ハザード =====
+  P4_HAZ: { id:"P4_HAZ", phase:"定量判定", lawTag:"令8条",
+    question:"災害ハザードエリアに該当しますか？",
+    conditions:["土砂災害特別警戒区域（レッドゾーン）","浸水想定区域","地すべり防止区域","急傾斜地崩壊危険区域"],
+    conditionsLabel: "以下のいずれかに該当する場合は「該当」を選択",
+    options:[
+      { label:"非該当", next:"R_OK", icon:"✅", desc:"ハザードエリア外" },
+      { label:"該当", next:"R_HAZ", icon:"⚠️", law:"法34条14号", desc:"上記のいずれかに該当" },
+      { label:"未確認", next:"CHECK_HAZARD", icon:"❓", desc:"確認方法をご案内します" },
+    ],
+  },
+  CHECK_HAZARD: { id:"CHECK_HAZARD", phase:"定量判定", type:"check", howTo:"HAZARD",
+    question:"災害ハザードエリアを確認してから選択してください",
+    options:[
+      { label:"非該当", next:"R_OK", icon:"✅" },
+      { label:"該当", next:"R_HAZ", icon:"⚠️", law:"法34条14号" },
+    ],
+  },
+  // ===== 結果 =====
+  R_OK: { id:"R_OK", phase:"結果", type:"result", provision:null, lawTag:"—",
+    title:"該当する立地基準あり — 開発許可申請の手続きへ",
+    message:"該当する立地基準が見つかりました。判定フロー票を印刷またはメール送信のうえ、建築指導課で事前相談を行ってください。",
+    nextSteps:["判定フロー票を印刷または保存","建築指導課窓口（市役所西庁舎1F）で事前相談","法32条協議先との事前協議","開発許可申請書の作成・提出"],
+  },
+  R_HAZ: { id:"R_HAZ", phase:"結果", type:"result", provision:"REVIEW_BOARD", lawTag:"法34条14号",
+    title:"災害ハザードエリア該当 — 開発審査会での個別審査が必要",
+    message:"災害ハザードエリアに該当するため定型基準での許可は不可。法34条14号に基づく開発審査会での個別審査が必要です。",
+    nextSteps:["判定フロー票を印刷または保存","建築指導課窓口（市役所西庁舎1F）で事前相談"],
+  },
+  R_NOPERM: { id:"R_NOPERM", phase:"結果", type:"result", provision:"NO_PERMIT", lawTag:"—",
+    title:"開発許可不要 — 建築確認申請のみ",
+    message:"日本標準産業分類の小分類で同一業種への用途変更は開発許可不要（改築扱い）。",
+    nextSteps:["建築確認申請へ","業種の同一性に疑義があれば建築指導課で確認"],
+  },
+};
+
+// ============================================================
+// UI COMPONENTS
+// ============================================================
+const PHASES = ["エリア判定","目的確認","属性判定","定量判定","結果"];
+const PHASE_ICONS = ["📍","🎯","👤","📏","🏁"];
+const PHASE_COLORS = {
+  "エリア判定": { bg: "#EEF2FF", fg: "#4338CA" },
+  "目的確認":   { bg: "#ECFDF5", fg: "#065F46" },
+  "属性判定":   { bg: "#FFFBEB", fg: "#92400E" },
+  "定量判定":   { bg: "#FFF1F2", fg: "#9F1239" },
+  "結果":       { bg: "#F5F3FF", fg: "#5B21B6" },
+};
+
+const ProgressBar = ({ currentPhase }) => {
+  const ci = Math.max(0, PHASES.indexOf(currentPhase));
+  const pct = ((ci) / (PHASES.length - 1)) * 100;
+  return (
+    <div style={{ marginBottom: 28 }}>
+      <div style={{ position: "relative", height: 6, background: "#E5E7EB", borderRadius: 99 }}>
+        <div style={{ position: "absolute", left: 0, top: 0, height: "100%", borderRadius: 99, background: "linear-gradient(90deg, #6366F1, #10B981, #F59E0B, #F43F5E, #8B5CF6)", width: `${pct}%`, transition: "width 0.5s cubic-bezier(0.4,0,0.2,1)" }} />
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10 }}>
+        {PHASES.map((p, i) => (
+          <div key={p} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, opacity: i <= ci ? 1 : 0.35, transition: "opacity 0.3s", flex: 1 }}>
+            <span style={{ fontSize: 16 }}>{PHASE_ICONS[i]}</span>
+            <span style={{ fontSize: 10, fontWeight: i === ci ? 700 : 500, color: i === ci ? PHASE_COLORS[p].fg : "#6B7280", letterSpacing: 0.5 }}>{p}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const LawBadge = ({ law, size = "sm" }) => {
+  if (!law || law === "—") return null;
+  const bg = law.startsWith("法") ? "#1E3A5F" : law.startsWith("条例") ? "#7C2D12" : law.startsWith("令") ? "#4A1D96" : law.startsWith("農") ? "#166534" : law.startsWith("審") ? "#475569" : "#374151";
+  const s = size === "lg" ? { fontSize: 14, padding: "6px 14px" } : { fontSize: 11, padding: "3px 8px" };
+  return <span style={{ display: "inline-block", borderRadius: 6, background: bg, color: "#fff", fontWeight: 700, whiteSpace: "nowrap", letterSpacing: 0.3, ...s }}>{law}</span>;
+};
+
+const ConditionChecklist = ({ conditions, label, note }) => (
+  <div style={{ margin: "16px 0 20px", padding: "20px", background: "#FFFBEB", borderRadius: 16, border: "2px solid #FDE68A" }}>
+    <div style={{ fontSize: 13, fontWeight: 700, color: "#92400E", marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}>
+      <span style={{ fontSize: 18 }}>📋</span>
+      {label || "以下の要件をすべて確認してください"}
+    </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      {conditions.map((c, i) => (
+        <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", background: "#fff", borderRadius: 12, border: "1px solid #FDE68A", fontSize: 15, fontWeight: 600, color: "#1F2937", lineHeight: 1.5 }}>
+          <div style={{ width: 32, height: 32, borderRadius: 8, background: "#FEF3C7", color: "#D97706", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, flexShrink: 0 }}>{i + 1}</div>
+          <span>{c}</span>
+        </div>
+      ))}
+    </div>
+    {note && <div style={{ marginTop: 12, fontSize: 12, color: "#92400E", lineHeight: 1.6, padding: "10px 14px", background: "#FEF3C7", borderRadius: 8 }}>💡 {note}</div>}
+  </div>
+);
+
+const HowToCheckPanel = ({ howTo }) => {
+  const data = HOW_TO_CHECK[howTo];
+  if (!data) return null;
+  return (
+    <div style={{ margin: "0 0 24px", padding: "20px", background: "#EEF2FF", borderRadius: 16, border: "2px solid #C7D2FE" }}>
+      <div style={{ fontSize: 15, fontWeight: 800, color: "#4338CA", marginBottom: 6, display: "flex", alignItems: "center", gap: 8 }}>
+        <span style={{ fontSize: 20 }}>🔍</span>{data.title}
+      </div>
+      {data.note && <div style={{ fontSize: 12, color: "#6366F1", marginBottom: 12, fontWeight: 600, lineHeight: 1.5 }}>{data.note}</div>}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {data.items.map((item, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "14px 16px", background: "#fff", borderRadius: 12, border: "1px solid #E0E7FF" }}>
+            <span style={{ fontSize: 24, flexShrink: 0, lineHeight: 1 }}>{item.icon}</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#1F2937", lineHeight: 1.4 }}>{item.method}</div>
+              <div style={{ fontSize: 12, color: "#6B7280", marginTop: 2, lineHeight: 1.5 }}>{item.detail}</div>
+              {item.url && <div style={{ fontSize: 11, color: "#4338CA", marginTop: 4, wordBreak: "break-all" }}>🔗 {item.url}</div>}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const OptionCard = ({ opt, onClick, index, totalOptions }) => {
+  const isGrid = totalOptions >= 4;
+  return (
+    <button onClick={onClick} style={{ display: "flex", flexDirection: isGrid ? "column" : "row", alignItems: "center", gap: isGrid ? 8 : 16, width: "100%", padding: isGrid ? "20px 16px" : "18px 20px", background: "#FFFFFF", border: "2px solid #E5E7EB", borderRadius: 16, cursor: "pointer", textAlign: isGrid ? "center" : "left", transition: "all 0.2s cubic-bezier(0.4,0,0.2,1)", animation: `cardIn 0.35s cubic-bezier(0.16,1,0.3,1) ${index * 0.06}s both` }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = "#6366F1"; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 25px rgba(99,102,241,0.15)"; }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = "#E5E7EB"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}>
+      <div style={{ fontSize: isGrid ? 40 : 32, lineHeight: 1, flexShrink: 0, filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))" }}>{opt.icon}</div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: isGrid ? 14 : 16, fontWeight: 700, color: "#1F2937", lineHeight: 1.4 }}>{opt.label}</div>
+        {opt.desc && <div style={{ fontSize: 12, color: "#6B7280", marginTop: 3, lineHeight: 1.4 }}>{opt.desc}</div>}
+        {opt.law && <div style={{ marginTop: 5 }}><LawBadge law={opt.law} /></div>}
+      </div>
+      {!isGrid && <div style={{ color: "#D1D5DB", fontSize: 20, flexShrink: 0, fontWeight: 300 }}>›</div>}
+    </button>
+  );
+};
+
+const ResultScreen = ({ step, prov, trail, dp, onBack, onRestart }) => {
+  const pk = step.id === "R_OK" ? dp : step.provision;
+  const p = pk ? PROVISIONS[pk] : prov;
+  const isPositive = ["R_OK","R_URB_NO","R_FARM_A","R_FARM_N","R_NOPERM"].includes(step.id);
+  return (
+    <div style={{ animation: "resultIn 0.5s cubic-bezier(0.16,1,0.3,1)" }}>
+      <div style={{ textAlign: "center", padding: "32px 24px", background: isPositive ? "linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)" : "linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%)", borderRadius: 20, marginBottom: 24, border: `2px solid ${isPositive ? "#A7F3D0" : "#FED7AA"}` }}>
+        <div style={{ fontSize: 48, marginBottom: 12 }}>{isPositive ? "✅" : "⚠️"}</div>
+        <h2 style={{ fontSize: 20, fontWeight: 800, color: "#1F2937", lineHeight: 1.5, marginBottom: 8 }}>{step.title}</h2>
+        {p && <div style={{ display: "flex", justifyContent: "center", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
+          <LawBadge law={p.law} size="lg" />
+          <span style={{ fontSize: 14, fontWeight: 700, color: p.color, background: "#fff", padding: "5px 14px", borderRadius: 8, border: `1px solid ${p.color}22` }}>{p.icon} {p.label}</span>
+        </div>}
+      </div>
+      <div style={{ padding: "20px 24px", background: "#F9FAFB", borderRadius: 16, borderLeft: `4px solid ${p?.color || "#6366F1"}`, marginBottom: 20, fontSize: 14, lineHeight: 1.8, color: "#374151" }}>{step.message}</div>
+      {step.nextSteps?.length > 0 && <div style={{ marginBottom: 24 }}>
+        <h3 style={{ fontSize: 15, fontWeight: 700, color: "#4338CA", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}><span style={{ fontSize: 20 }}>📋</span> 次のステップ</h3>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {step.nextSteps.map((s, i) => (
+            <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "12px 16px", background: "#fff", borderRadius: 12, border: "1px solid #E5E7EB" }}>
+              <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#EEF2FF", color: "#4338CA", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
+              <span style={{ fontSize: 14, color: "#374151", lineHeight: 1.6 }}>{s}</span>
+            </div>
+          ))}
+        </div>
+      </div>}
+      <details style={{ marginBottom: 24 }}>
+        <summary style={{ cursor: "pointer", fontSize: 14, fontWeight: 600, color: "#6B7280", padding: "12px 0", display: "flex", alignItems: "center", gap: 8 }}><span style={{ fontSize: 16 }}>📊</span> 判定フロー（{trail.length}ステップ）</summary>
+        <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 12, overflow: "hidden", marginTop: 8 }}>
+          <div style={{ padding: "12px 16px", background: "#1E3A5F", color: "#fff", fontSize: 13, fontWeight: 700, textAlign: "center" }}>開発相談ナビ 判定フロー票 — {new Date().toLocaleDateString("ja-JP")}</div>
+          {trail.map((e, i) => (
+            <div key={i} style={{ display: "flex", gap: 12, padding: "10px 16px", borderBottom: "1px solid #F3F4F6", alignItems: "center", background: i % 2 === 0 ? "#fff" : "#FAFAFA", fontSize: 13 }}>
+              <span style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, background: "#EEF2FF", color: "#4338CA", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700 }}>{i + 1}</span>
+              <span style={{ color: "#9CA3AF", fontSize: 11, width: 56, flexShrink: 0 }}>{e.phase}</span>
+              <span style={{ flex: 1, color: "#374151" }}>{e.answer}</span>
+              <LawBadge law={e.law} />
+            </div>
+          ))}
+        </div>
+      </details>
+      <div style={{ display: "flex", gap: 12 }}>
+        <button onClick={onBack} style={{ flex: 1, padding: "16px", background: "#F3F4F6", color: "#374151", border: "2px solid #E5E7EB", borderRadius: 14, cursor: "pointer", fontSize: 15, fontWeight: 700 }}
+          onMouseEnter={e => e.currentTarget.style.background = "#E5E7EB"} onMouseLeave={e => e.currentTarget.style.background = "#F3F4F6"}>← 戻る</button>
+        <button onClick={onRestart} style={{ flex: 1, padding: "16px", background: "linear-gradient(135deg, #4338CA, #6366F1)", color: "#fff", border: "none", borderRadius: 14, cursor: "pointer", fontSize: 15, fontWeight: 700, boxShadow: "0 4px 14px rgba(99,102,241,0.3)" }}
+          onMouseEnter={e => e.currentTarget.style.transform = "translateY(-1px)"} onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}>🔄 最初からやり直す</button>
+      </div>
+    </div>
+  );
+};
+
+const LandingScreen = ({ onStart }) => (
+  <div style={{ textAlign: "center", padding: "20px 0", animation: "cardIn 0.5s cubic-bezier(0.16,1,0.3,1)" }}>
+    <div style={{ fontSize: 64, marginBottom: 16, filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.1))" }}>🏗️</div>
+    <h2 style={{ fontSize: 22, fontWeight: 800, color: "#1F2937", lineHeight: 1.5, marginBottom: 8 }}>開発許可の要否を<br />かんたん診断</h2>
+    <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.8, maxWidth: 380, margin: "0 auto 28px" }}>いくつかの質問に答えるだけで、あなたの建築計画に必要な手続きがわかります。所要時間は約2〜5分です。</p>
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, maxWidth: 400, margin: "0 auto 32px" }}>
+      {[{ icon: "⏱️", label: "約2〜5分" }, { icon: "🏛️", label: "岡崎市版" }, { icon: "🆓", label: "無料" }].map(f => (
+        <div key={f.label} style={{ padding: "16px 8px", background: "#F9FAFB", borderRadius: 14, border: "1px solid #E5E7EB" }}>
+          <div style={{ fontSize: 24, marginBottom: 6 }}>{f.icon}</div>
+          <div style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>{f.label}</div>
+        </div>
+      ))}
+    </div>
+    <button onClick={onStart} style={{ width: "100%", maxWidth: 360, padding: "18px 32px", background: "linear-gradient(135deg, #4338CA, #6366F1)", color: "#fff", border: "none", borderRadius: 16, cursor: "pointer", fontSize: 18, fontWeight: 800, letterSpacing: 1, boxShadow: "0 6px 20px rgba(99,102,241,0.35)", transition: "all 0.2s" }}
+      onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 30px rgba(99,102,241,0.45)"; }}
+      onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 6px 20px rgba(99,102,241,0.35)"; }}>
+      診断をはじめる →
+    </button>
+  </div>
+);
+
+// ============================================================
+// Main App
+// ============================================================
+function App() {
+  const [started, setStarted] = useState(false);
+  const [cur, setCur] = useState("P1_AREA");
+  const [hist, setHist] = useState([]);
+  const [trail, setTrail] = useState([]);
+  const [dp, setDp] = useState(null);
+  const mainRef = useRef(null);
+  const step = STEPS[cur];
+
+  useEffect(() => {
+    if (mainRef.current) mainRef.current.scrollTo?.({ top: 0, behavior: "smooth" });
+  }, [cur]);
+
+  const choose = (opt) => {
+    if (opt.selfRef) return;
+    setTrail(p => [...p, { phase: step.phase, question: step.question, answer: opt.label.split("→")[0].trim(), law: opt.law || "—" }]);
+    if (opt.rp) setDp(opt.rp);
+    setHist(p => [...p, cur]);
+    setCur(opt.next);
+  };
+  const back = () => { if (hist.length > 0) { const p = [...hist]; setCur(p.pop()); setHist(p); setTrail(t => t.slice(0, -1)); } };
+  const restart = () => { setHist([]); setTrail([]); setCur("P1_AREA"); setDp(null); };
+
+  const pk = cur === "R_OK" ? dp : step.provision;
+  const prov = pk ? PROVISIONS[pk] : null;
+  const phaseColor = PHASE_COLORS[step.phase] || PHASE_COLORS["結果"];
+  const isGrid = step.options?.length >= 4;
+
+  return (
+    <div style={{ minHeight: "100vh", background: "linear-gradient(180deg, #F8FAFC 0%, #EEF2FF 50%, #F8FAFC 100%)", display: "flex", justifyContent: "center", padding: "20px 12px" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;800;900&display=swap');
+        * { box-sizing: border-box; margin: 0; font-family: 'Noto Sans JP', sans-serif; }
+        @keyframes cardIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes resultIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+        button:active { transform: scale(0.97) !important; }
+      `}</style>
+      <div ref={mainRef} style={{ width: "100%", maxWidth: 520 }}>
+        <div style={{ textAlign: "center", marginBottom: 20, animation: "cardIn 0.3s ease" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#fff", padding: "8px 20px", borderRadius: 99, border: "1px solid #E5E7EB", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+            <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 3, color: "#9CA3AF" }}>岡崎市</span>
+            <span style={{ width: 1, height: 14, background: "#E5E7EB" }} />
+            <span style={{ fontSize: 15, fontWeight: 900, color: "#1F2937", letterSpacing: 2 }}>開発相談ナビ</span>
+          </div>
+        </div>
+        <div style={{ background: "#FFFFFF", borderRadius: 24, padding: "28px 24px 32px", border: "1px solid #E5E7EB", boxShadow: "0 4px 24px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}>
+          {!started ? (
+            <LandingScreen onStart={() => setStarted(true)} />
+          ) : step.type === "result" ? (
+            <>
+              <ProgressBar currentPhase="結果" />
+              <ResultScreen step={step} prov={prov} trail={trail} dp={dp} onBack={back} onRestart={restart} />
+            </>
+          ) : (
+            <div style={{ animation: "cardIn 0.35s cubic-bezier(0.16,1,0.3,1)" }}>
+              <ProgressBar currentPhase={step.phase} />
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 12px", borderRadius: 8, background: phaseColor.bg, color: phaseColor.fg, fontSize: 12, fontWeight: 700 }}>
+                  {PHASE_ICONS[PHASES.indexOf(step.phase)]} {step.phase}
+                </span>
+                <LawBadge law={step.lawTag} size="sm" />
+              </div>
+              <h2 style={{ fontSize: 20, fontWeight: 800, color: "#111827", lineHeight: 1.6, marginBottom: 4 }}>{step.question}</h2>
+              {step.type === "check" && step.howTo && <HowToCheckPanel howTo={step.howTo} />}
+              {step.conditions && <ConditionChecklist conditions={step.conditions} label={step.conditionsLabel} note={step.conditionsNote} />}
+              {step.help && !step.conditions && (
+                <div style={{ fontSize: 12, color: "#6B7280", lineHeight: 1.8, marginBottom: 20, whiteSpace: "pre-line", padding: "12px 16px", background: "#F9FAFB", borderRadius: 12, border: "1px solid #F3F4F6" }}>💡 {step.help}</div>
+              )}
+              <div style={{ display: "grid", gridTemplateColumns: isGrid ? "1fr 1fr" : "1fr", gap: 10 }}>
+                {step.options.map((opt, i) => (
+                  <OptionCard key={opt.label} opt={opt} onClick={() => choose(opt)} index={i} totalOptions={step.options.length} />
+                ))}
+              </div>
+              {hist.length > 0 && (
+                <button onClick={back} style={{ marginTop: 20, padding: "10px 16px", background: "none", border: "none", color: "#9CA3AF", cursor: "pointer", fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 4, transition: "color 0.2s" }}
+                  onMouseEnter={e => e.currentTarget.style.color = "#4B5563"} onMouseLeave={e => e.currentTarget.style.color = "#9CA3AF"}>← 前の質問に戻る</button>
+              )}
+            </div>
+          )}
+        </div>
+        <div style={{ textAlign: "center", marginTop: 16, fontSize: 11, color: "#9CA3AF", lineHeight: 1.7 }}>
+          <div>本システムの判定は参考情報です。正式な可否判断は建築指導課の審査にて行います。</div>
+          <div style={{ marginTop: 2 }}>岡崎市 都市政策部 建築指導課（市役所西庁舎1F）☎ 0564-23-6253</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
