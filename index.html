@@ -99,7 +99,7 @@ const HOW_TO_CHECK = {
   LAND_OWNERSHIP: {
     title: "土地の所有時期の確認方法",
     items: [
-      { icon: "📜", method: "登記事項証明書「甲区」欄", detail: "受付年月日を確認。相続の場合は被相続人の取得日が基準" },
+      { icon: "📄", method: "登記事項証明書「甲区」欄", detail: "受付年月日を確認。相続の場合は被相続人の取得日が基準" },
       { icon: "🏛️", method: "名古屋法務局 岡崎支局", detail: "窓口600円／オンライン332円で取得可能" },
     ],
   },
@@ -144,7 +144,7 @@ const HOW_TO_CHECK = {
     title: "居住歴の確認方法",
     items: [
       { icon: "📄", method: "住民票の除票", detail: "市民課窓口で取得。過去の住所履歴を確認" },
-      { icon: "📜", method: "戸籍の附票", detail: "本籍地の市区町村で取得。住所の移り変わりを証明" },
+      { icon: "📄", method: "戸籍の附票", detail: "本籍地の市区町村で取得。住所の移り変わりを証明" },
     ],
   },
   ROAD_ACCESS: {
@@ -306,10 +306,10 @@ const STEPS = {
   // === 市街化調整区域：適用除外チェック（木俣フロー準拠） ===
   P1A_EXEMPT: { id:"P1A_EXEMPT", phase:"エリア判定", lawTag:"法29条1項",
     question:"以下の適用除外に該当しますか？",
-    help:"法29条1項各号の適用除外に該当する場合、開発許可は不要です。",
+    help:"以下に当てはまる場合、開発許可の手続きは不要です。ご自身の計画に近いものを選んでください。",
     options:[
       { label:"農林漁業従事者の住宅", next:"P4_FARM_CHECK", icon:"🌾", law:"法29条1項2号", desc:"農業委員会の農業従事者証明の交付対象者" },
-      { label:"公共施設・国/県の行為等", next:"R_EXEMPT_PUB", icon:"🏛️", law:"法29条1項3〜5号", desc:"図書館・公民館等の公益上必要な建築物、国/県の行為" },
+      { label:"公共施設・国/県の行為等", next:"R_EXEMPT_PUB", icon:"govt", law:"法29条1項3〜5号", desc:"図書館・公民館等の公益上必要な建築物、国/県の行為" },
       { label:"該当しない・わからない", next:"P2_PURPOSE", icon:"arrow", desc:"立地基準の確認へ進む" },
     ],
   },
@@ -325,7 +325,7 @@ const STEPS = {
     question:"建築予定地は農地（田・畑）ですか？",
     help:"登記事項証明書の「地目」欄、または固定資産課税台帳で確認",
     options:[
-      { label:"農地", next:"R_FARM_A", icon:"🌱", law:"農地法4条/5条", desc:"転用許可が別途必要" },
+      { label:"農地", next:"R_FARM_A", icon:"🌾", law:"農地法4条/5条", desc:"転用許可が別途必要" },
       { label:"農地以外", next:"R_FARM_N", icon:"🏡", desc:"宅地・山林・雑種地等" },
     ],
   },
@@ -380,7 +380,7 @@ const STEPS = {
     conditions:["鉱物資源・観光資源の利用上必要な施設（法34条2号）","農林業等活性化のための施設（法34条5号）※本市該当区域なし","中小企業振興のための施設（法34条6号）","災害危険区域等からの移転（法34条8号の2）","地区計画区域内の開発行為（法34条10号）","額田地域の条例指定区域（法34条11号）","既存権利者の開発行為（法34条13号）"],
     conditionsLabel:"以下のいずれかに該当する場合は「該当する」を選択",
     options:[
-      { label:"該当する", next:"R_SPECIAL", icon:"search", law:"法34条各号", desc:"窓口で具体的な適用を確認" },
+      { label:"該当する・確認したい", next:"R_SPECIAL", icon:"🔍", law:"法34条各号", desc:"窓口で詳しくご案内します" },
       { label:"該当しない", next:"P3H_EXLOT_CHK", icon:"arrow", desc:"既存宅地の判定へ" },
     ],
   },
@@ -594,7 +594,7 @@ const STEPS = {
     conditions:["鉱物資源・観光資源の利用（法34条2号）","中小企業振興のための施設（法34条6号）","災害危険区域等からの移転（法34条8号の2）","地区計画区域内（法34条10号）","土地収用対象事業による移転（条例別表2項）","条例指定区域（法34条11号）","1ha未満運動施設等の併設（条例別表15項）"],
     conditionsLabel:"以下のいずれかに該当する場合は「該当する」を選択",
     options:[
-      { label:"該当する", next:"R_SPECIAL", icon:"search", desc:"窓口で具体的な適用を確認" },
+      { label:"該当する・確認したい", next:"R_SPECIAL", icon:"🔍", desc:"窓口で詳しくご案内します" },
       { label:"該当しない", next:"P3S_EXLOT", icon:"arrow", desc:"既存宅地判定へ" },
     ],
   },
@@ -671,7 +671,7 @@ const STEPS = {
     conditions:["鉱物資源・観光資源の利用（法34条2号）","中小企業振興のための施設（法34条6号）","災害危険区域等からの移転（法34条8号の2）","地区計画区域内（法34条10号）"],
     conditionsLabel:"以下のいずれかに該当する場合は「該当する」を選択",
     options:[
-      { label:"該当する", next:"R_SPECIAL", icon:"search" },
+      { label:"該当する・確認したい", next:"R_SPECIAL", icon:"🔍", desc:"窓口で詳しくご案内します" },
       { label:"該当しない", next:"P3O_EXLOT", icon:"arrow" },
     ],
   },
@@ -725,7 +725,7 @@ const STEPS = {
     conditions:["鉱物資源・観光資源の利用（法34条2号）","中小企業振興のための施設（法34条6号）","災害危険区域等からの移転（法34条8号の2）","地区計画区域内（法34条10号）"],
     conditionsLabel:"以下のいずれかに該当する場合は「該当する」を選択",
     options:[
-      { label:"該当する", next:"R_SPECIAL", icon:"search" },
+      { label:"該当する・確認したい", next:"R_SPECIAL", icon:"🔍", desc:"窓口で詳しくご案内します" },
       { label:"該当しない", next:"P3I_EXLOT", icon:"arrow" },
     ],
   },
@@ -812,7 +812,7 @@ const STEPS = {
     conditions:["鉱物資源・観光資源の利用（法34条2号）","中小企業振興のための施設（法34条6号）","災害危険区域等からの移転（法34条8号の2）","地区計画区域内（法34条10号）"],
     conditionsLabel:"以下のいずれかに該当する場合は「該当する」を選択",
     options:[
-      { label:"該当する", next:"R_SPECIAL", icon:"search" },
+      { label:"該当する・確認したい", next:"R_SPECIAL", icon:"🔍", desc:"窓口で詳しくご案内します" },
       { label:"該当しない", next:"P3SK_EXLOT", icon:"arrow" },
     ],
   },
@@ -857,7 +857,7 @@ const STEPS = {
     conditions:["災害危険区域等からの移転（法34条8号の2）","地区計画区域内（法34条10号）"],
     conditionsLabel:"以下のいずれかに該当する場合は「該当する」を選択",
     options:[
-      { label:"該当する", next:"R_SPECIAL", icon:"search" },
+      { label:"該当する・確認したい", next:"R_SPECIAL", icon:"🔍", desc:"窓口で詳しくご案内します" },
       { label:"該当しない", next:"P3W_EXLOT", icon:"arrow" },
     ],
   },
@@ -1226,6 +1226,41 @@ const SVG_ICONS = {
   refresh: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#ea580c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>,
   clipboard: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="8" y="2" width="8" height="4" rx="1" fill="#64748b" opacity="0.15" stroke="none"/><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>,
   square: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" fill="#9CA3AF" opacity="0.1"/></svg>,
+  // === Building / Purpose icons ===
+  house: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 01-1 1H4a1 1 0 01-1-1z" fill="#2563eb" opacity="0.1"/><polyline points="9,22 9,15 15,15 15,22"/><path d="M3 10.5L12 3l9 7.5"/></svg>,
+  house2: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 01-1 1H4a1 1 0 01-1-1z" fill="#2563eb" opacity="0.1"/><path d="M3 10.5L12 3l9 7.5"/><rect x="9" y="14" width="6" height="8" rx="0.5"/><circle cx="18" cy="18" r="3" fill="#16a34a" opacity="0.3" stroke="#16a34a"/></svg>,
+  houses: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12l6-5v14H1z" fill="#2563eb" opacity="0.15"/><path d="M9 10l6-5v16H9z" fill="#4338CA" opacity="0.12"/><path d="M17 11l6-4.5V22h-6z" fill="#2563eb" opacity="0.08"/><path d="M1 12l6-5M9 10l6-5M17 11l6-4.5"/></svg>,
+  construction: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="10" width="16" height="12" rx="1" fill="#d97706" opacity="0.1"/><path d="M4 10l8-7 8 7"/><rect x="8" y="14" width="3" height="3" rx="0.5" fill="#d97706" opacity="0.25"/><rect x="13" y="14" width="3" height="3" rx="0.5" fill="#d97706" opacity="0.25"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="10" y1="2" x2="14" y2="2"/></svg>,
+  office: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="3" width="16" height="19" rx="1.5" fill="#475569" opacity="0.1"/><rect x="7" y="6" width="3" height="2.5" rx="0.5" fill="#475569" opacity="0.2"/><rect x="14" y="6" width="3" height="2.5" rx="0.5" fill="#475569" opacity="0.2"/><rect x="7" y="11" width="3" height="2.5" rx="0.5" fill="#475569" opacity="0.2"/><rect x="14" y="11" width="3" height="2.5" rx="0.5" fill="#475569" opacity="0.2"/><rect x="10" y="17" width="4" height="5" rx="0.5" fill="#475569" opacity="0.15"/></svg>,
+  factory: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 22V14l6-4v4l6-4v4l6-4v12z" fill="#dc2626" opacity="0.1"/><rect x="3" y="2" width="4" height="10" rx="0.5" fill="#dc2626" opacity="0.15"/><path d="M5 2v-0" stroke="none"/><ellipse cx="5" cy="2" rx="2" ry="1" fill="#9CA3AF" opacity="0.3"/></svg>,
+  city: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#0369a1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="8" width="7" height="14" rx="1" fill="#0369a1" opacity="0.12"/><rect x="9" y="3" width="7" height="19" rx="1" fill="#0369a1" opacity="0.18"/><rect x="17" y="10" width="6" height="12" rx="1" fill="#0369a1" opacity="0.08"/><rect x="3" y="11" width="2" height="2" rx="0.3" fill="#0369a1" opacity="0.25"/><rect x="3" y="15" width="2" height="2" rx="0.3" fill="#0369a1" opacity="0.25"/><rect x="11" y="6" width="2" height="2" rx="0.3" fill="#0369a1" opacity="0.25"/><rect x="11" y="10" width="2" height="2" rx="0.3" fill="#0369a1" opacity="0.25"/><rect x="11" y="14" width="2" height="2" rx="0.3" fill="#0369a1" opacity="0.25"/></svg>,
+  hospital: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#be185d" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="17" rx="1.5" fill="#be185d" opacity="0.1"/><path d="M3 9h18"/><rect x="9" y="12" width="6" height="1.5" rx="0.3" fill="#be185d"/><rect x="11.25" y="9.75" width="1.5" height="6" rx="0.3" fill="#be185d"/><rect x="10" y="18" width="4" height="4" rx="0.5" fill="#be185d" opacity="0.15"/></svg>,
+  hotel: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#be185d" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="1.5" fill="#be185d" opacity="0.08"/><rect x="6" y="7" width="3" height="2.5" rx="0.5" fill="#be185d" opacity="0.2"/><rect x="15" y="7" width="3" height="2.5" rx="0.5" fill="#be185d" opacity="0.2"/><rect x="6" y="12" width="3" height="2.5" rx="0.5" fill="#be185d" opacity="0.2"/><rect x="15" y="12" width="3" height="2.5" rx="0.5" fill="#be185d" opacity="0.2"/><rect x="10" y="17" width="4" height="5" rx="0.5" fill="#be185d" opacity="0.15"/><path d="M9 4V2h6v2"/></svg>,
+  shop: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="10" width="18" height="12" rx="1" fill="#d97706" opacity="0.1"/><path d="M3 10l2-7h14l2 7" fill="#d97706" opacity="0.15"/><path d="M3 10h18"/><rect x="9" y="15" width="6" height="7" rx="0.5" fill="#d97706" opacity="0.12"/></svg>,
+  bigshop: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="17" rx="1.5" fill="#d97706" opacity="0.1"/><path d="M2 9h20"/><rect x="5" y="12" width="4" height="3" rx="0.5" fill="#d97706" opacity="0.2"/><rect x="10" y="12" width="4" height="3" rx="0.5" fill="#d97706" opacity="0.2"/><rect x="15" y="12" width="4" height="3" rx="0.5" fill="#d97706" opacity="0.2"/><rect x="9" y="18" width="6" height="4" rx="0.5" fill="#d97706" opacity="0.15"/></svg>,
+  govt: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#4338CA" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 20h20"/><path d="M4 20V10"/><path d="M20 20V10"/><path d="M2 10l10-7 10 7"/><rect x="7" y="12" width="3" height="5" rx="0.5" fill="#4338CA" opacity="0.15"/><rect x="14" y="12" width="3" height="5" rx="0.5" fill="#4338CA" opacity="0.15"/><path d="M12 3v2" fill="none"/></svg>,
+  farm: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#166534" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v6" /><path d="M9 5c0 0 3-2 6 0"/><path d="M7 8c0 0 5-3 10 0"/><rect x="2" y="14" width="20" height="8" rx="1" fill="#166534" opacity="0.1"/><line x1="6" y1="16" x2="6" y2="20" stroke="#166534" opacity="0.4"/><line x1="10" y1="16" x2="10" y2="20" stroke="#166534" opacity="0.4"/><line x1="14" y1="16" x2="14" y2="20" stroke="#166534" opacity="0.4"/><line x1="18" y1="16" x2="18" y2="20" stroke="#166534" opacity="0.4"/></svg>,
+  cart: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1.5" fill="#d97706" opacity="0.2"/><circle cx="20" cy="21" r="1.5" fill="#d97706" opacity="0.2"/><path d="M1 1h4l2.68 13.39a1 1 0 001 .81h9.72a1 1 0 001-.76L23 6H6"/></svg>,
+  road: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 22L8 2h8l4 20" fill="#64748b" opacity="0.08"/><line x1="12" y1="5" x2="12" y2="8" strokeDasharray="0"/><line x1="12" y1="11" x2="12" y2="14" strokeDasharray="0"/><line x1="12" y1="17" x2="12" y2="20" strokeDasharray="0"/></svg>,
+  truck: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="6" width="15" height="11" rx="1" fill="#64748b" opacity="0.1"/><path d="M16 9h4l3 4v4h-7V9z" fill="#64748b" opacity="0.15"/><circle cx="5.5" cy="19.5" r="2" fill="#64748b" opacity="0.2"/><circle cx="18.5" cy="19.5" r="2" fill="#64748b" opacity="0.2"/></svg>,
+  person: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#4338CA" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="7" r="4" fill="#4338CA" opacity="0.12"/><path d="M5.5 21a6.5 6.5 0 0113 0" fill="#4338CA" opacity="0.08"/></svg>,
+  family: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="6" r="3" fill="#2563eb" opacity="0.12"/><circle cx="16" cy="6" r="3" fill="#2563eb" opacity="0.12"/><circle cx="12" cy="10" r="2" fill="#6366f1" opacity="0.15"/><path d="M2 22a6 6 0 0112 0" fill="#2563eb" opacity="0.06"/><path d="M10 22a6 6 0 0112 0" fill="#2563eb" opacity="0.06"/></svg>,
+  money: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" fill="#d97706" opacity="0.1"/><path d="M12 6v12M9 9.5a3 3 0 003 3h0a3 3 0 010 6h-0M15 14.5a3 3 0 01-3 3"/></svg>,
+  ruler: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#ea580c" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 3L3 21"/><path d="M17 3l4 4"/><path d="M14.5 5.5l2 2"/><path d="M11 8l2 2"/><path d="M7.5 11.5l2 2"/><path d="M3 17l4 4"/><rect x="2" y="14" width="8" height="8" rx="1" fill="#ea580c" opacity="0.08" stroke="none"/></svg>,
+  scroll: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 00-2 2v14c0 1.1.9 2 2 2h3" fill="#7c3aed" opacity="0.06"/><path d="M16 3h3a2 2 0 012 2v14a2 2 0 01-2 2h-3"/><rect x="7" y="1" width="10" height="22" rx="1.5" fill="#7c3aed" opacity="0.1"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="9" y1="15" x2="13" y2="15"/></svg>,
+  map: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#0891b2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4z" fill="#0891b2" opacity="0.08"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>,
+  tree: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#166534" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l-7 9h4l-4 7h14l-4-7h4z" fill="#166534" opacity="0.15"/><line x1="12" y1="19" x2="12" y2="22"/></svg>,
+  wrench: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94L6.73 20.2a2 2 0 01-2.83-2.83l6.73-6.73A6 6 0 016.3 2.93l3.77 3.77"/></svg>,
+  bulb: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 00-4 12.7V17h8v-2.3A7 7 0 0012 2z" fill="#d97706" opacity="0.1"/></svg>,
+  pin: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s-8-6-8-12a8 8 0 1116 0c0 6-8 12-8 12z" fill="#dc2626" opacity="0.12"/><circle cx="12" cy="10" r="3" fill="#dc2626" opacity="0.2"/></svg>,
+  explosive: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="14" r="8" fill="#dc2626" opacity="0.1"/><path d="M12 6V2M15 4l1-2M9 4L8 2"/><line x1="12" y1="11" x2="12" y2="15"/><circle cx="12" cy="17" r="0.5" fill="#dc2626"/></svg>,
+  wheelchair: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#4338CA" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="4" r="2" fill="#4338CA" opacity="0.15"/><path d="M12 8v6"/><path d="M8 14h8l2 6"/><circle cx="10" cy="18" r="3" fill="#4338CA" opacity="0.08"/></svg>,
+  box: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#78716c" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 8v13H3V8" fill="#78716c" opacity="0.08"/><rect x="1" y="3" width="22" height="5" rx="1" fill="#78716c" opacity="0.12"/><line x1="10" y1="12" x2="14" y2="12"/></svg>,
+  hammer: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3l6 6-3 3-6-6"/><path d="M9 12L3 21"/><rect x="13" y="1" width="2" height="8" rx="1" fill="#64748b" opacity="0.15" transform="rotate(45 14 5)"/></svg>,
+  calendar: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" fill="#6366f1" opacity="0.08"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><rect x="7" y="13" width="3" height="3" rx="0.5" fill="#6366f1" opacity="0.2"/></svg>,
+  mountain: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#166534" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 20L8.5 7l4 6 3.5-5L22 20z" fill="#166534" opacity="0.12"/><path d="M6 14l2.5-3 2 2"/></svg>,
+  barrier: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="8" width="20" height="6" rx="1" fill="#d97706" opacity="0.12"/><line x1="6" y1="8" x2="10" y2="14" stroke="#d97706"/><line x1="14" y1="8" x2="18" y2="14" stroke="#d97706"/><line x1="4" y1="14" x2="4" y2="20"/><line x1="20" y1="14" x2="20" y2="20"/></svg>,
+  phone: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#4338CA" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" fill="#4338CA" opacity="0.08"/><line x1="9" y1="18" x2="15" y2="18"/></svg>,
 };
 const Icon = ({ name, size = 24, color }) => {
   const fn = SVG_ICONS[name];
@@ -1287,7 +1322,7 @@ const ConditionChecklist = ({ conditions, label, note }) => (
         </div>
       ))}
     </div>
-    {note && <div style={{ marginTop: 12, fontSize: 12, color: "#92400E", lineHeight: 1.6, padding: "10px 14px", background: "#FEF3C7", borderRadius: 8 }}>💡 {note}</div>}
+    {note && <div style={{ marginTop: 12, fontSize: 12, color: "#92400E", lineHeight: 1.6, padding: "10px 14px", background: "#FEF3C7", borderRadius: 8}}>💡 {note}</div>}
   </div>
 );
 
@@ -1307,7 +1342,7 @@ const HowToCheckPanel = ({ howTo }) => {
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: "#1F2937", lineHeight: 1.4 }}>{item.method}</div>
               <div style={{ fontSize: 12, color: "#6B7280", marginTop: 2, lineHeight: 1.5 }}>{item.detail}</div>
-              {item.url && <div style={{ fontSize: 11, color: "#4338CA", marginTop: 4, wordBreak: "break-all" }}>🔗 {item.url}</div>}
+              {item.url && <div style={{ fontSize: 11, color: "#4338CA", marginTop: 4, wordBreak: "break-all"}}>🔗 {item.url}</div>}
             </div>
           </div>
         ))}
