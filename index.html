@@ -9,8 +9,32 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <style>
-  html, body { margin: 0; padding: 0; }
-  * { -webkit-tap-highlight-color: transparent; }
+  :root {
+    --hig-indigo: #5856D6;
+    --hig-indigo-light: #7B79E8;
+    --hig-bg: #F2F2F7;
+    --hig-card: #FFFFFF;
+    --hig-separator: rgba(60,60,67,0.12);
+    --hig-label: #1C1C1E;
+    --hig-secondary: #8E8E93;
+    --hig-tertiary: #C7C7CC;
+    --hig-green: #34C759;
+    --hig-orange: #FF9500;
+    --hig-red: #FF3B30;
+    --hig-blue: #007AFF;
+    --hig-radius: 16px;
+    --hig-radius-sm: 12px;
+    --hig-radius-xs: 8px;
+    --hig-shadow: 0 2px 16px rgba(0,0,0,0.08);
+    --hig-shadow-hover: 0 6px 24px rgba(88,86,214,0.18);
+    --hig-font: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+  }
+  html, body { margin: 0; padding: 0; font-family: var(--hig-font); background: var(--hig-bg); }
+  * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+  @keyframes cardIn { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  button { font-family: var(--hig-font); }
+  button:active { transform: scale(0.97) !important; opacity: 0.85; }
 </style>
 </head>
 <body>
@@ -99,7 +123,7 @@ const HOW_TO_CHECK = {
   LAND_OWNERSHIP: {
     title: "土地の所有時期の確認方法",
     items: [
-      { icon: "📄", method: "登記事項証明書「甲区」欄", detail: "受付年月日を確認。相続の場合は被相続人の取得日が基準" },
+      { icon: "📜", method: "登記事項証明書「甲区」欄", detail: "受付年月日を確認。相続の場合は被相続人の取得日が基準" },
       { icon: "🏛️", method: "名古屋法務局 岡崎支局", detail: "窓口600円／オンライン332円で取得可能" },
     ],
   },
@@ -144,7 +168,7 @@ const HOW_TO_CHECK = {
     title: "居住歴の確認方法",
     items: [
       { icon: "📄", method: "住民票の除票", detail: "市民課窓口で取得。過去の住所履歴を確認" },
-      { icon: "📄", method: "戸籍の附票", detail: "本籍地の市区町村で取得。住所の移り変わりを証明" },
+      { icon: "📜", method: "戸籍の附票", detail: "本籍地の市区町村で取得。住所の移り変わりを証明" },
     ],
   },
   ROAD_ACCESS: {
@@ -306,10 +330,10 @@ const STEPS = {
   // === 市街化調整区域：適用除外チェック（木俣フロー準拠） ===
   P1A_EXEMPT: { id:"P1A_EXEMPT", phase:"エリア判定", lawTag:"法29条1項",
     question:"以下の適用除外に該当しますか？",
-    help:"以下に当てはまる場合、開発許可の手続きは不要です。ご自身の計画に近いものを選んでください。",
+    help:"法29条1項各号の適用除外に該当する場合、開発許可は不要です。",
     options:[
       { label:"農林漁業従事者の住宅", next:"P4_FARM_CHECK", icon:"🌾", law:"法29条1項2号", desc:"農業委員会の農業従事者証明の交付対象者" },
-      { label:"公共施設・国/県の行為等", next:"R_EXEMPT_PUB", icon:"govt", law:"法29条1項3〜5号", desc:"図書館・公民館等の公益上必要な建築物、国/県の行為" },
+      { label:"公共施設・国/県の行為等", next:"R_EXEMPT_PUB", icon:"🏛️", law:"法29条1項3〜5号", desc:"図書館・公民館等の公益上必要な建築物、国/県の行為" },
       { label:"該当しない・わからない", next:"P2_PURPOSE", icon:"arrow", desc:"立地基準の確認へ進む" },
     ],
   },
@@ -325,7 +349,7 @@ const STEPS = {
     question:"建築予定地は農地（田・畑）ですか？",
     help:"登記事項証明書の「地目」欄、または固定資産課税台帳で確認",
     options:[
-      { label:"農地", next:"R_FARM_A", icon:"🌾", law:"農地法4条/5条", desc:"転用許可が別途必要" },
+      { label:"農地", next:"R_FARM_A", icon:"🌱", law:"農地法4条/5条", desc:"転用許可が別途必要" },
       { label:"農地以外", next:"R_FARM_N", icon:"🏡", desc:"宅地・山林・雑種地等" },
     ],
   },
@@ -380,7 +404,7 @@ const STEPS = {
     conditions:["鉱物資源・観光資源の利用上必要な施設（法34条2号）","農林業等活性化のための施設（法34条5号）※本市該当区域なし","中小企業振興のための施設（法34条6号）","災害危険区域等からの移転（法34条8号の2）","地区計画区域内の開発行為（法34条10号）","額田地域の条例指定区域（法34条11号）","既存権利者の開発行為（法34条13号）"],
     conditionsLabel:"以下のいずれかに該当する場合は「該当する」を選択",
     options:[
-      { label:"該当する・確認したい", next:"R_SPECIAL", icon:"🔍", law:"法34条各号", desc:"窓口で詳しくご案内します" },
+      { label:"該当する・確認したい", next:"R_SPECIAL", icon:"search", law:"法34条各号", desc:"窓口で具体的な適用を確認" },
       { label:"該当しない", next:"P3H_EXLOT_CHK", icon:"arrow", desc:"既存宅地の判定へ" },
     ],
   },
@@ -594,7 +618,7 @@ const STEPS = {
     conditions:["鉱物資源・観光資源の利用（法34条2号）","中小企業振興のための施設（法34条6号）","災害危険区域等からの移転（法34条8号の2）","地区計画区域内（法34条10号）","土地収用対象事業による移転（条例別表2項）","条例指定区域（法34条11号）","1ha未満運動施設等の併設（条例別表15項）"],
     conditionsLabel:"以下のいずれかに該当する場合は「該当する」を選択",
     options:[
-      { label:"該当する・確認したい", next:"R_SPECIAL", icon:"🔍", desc:"窓口で詳しくご案内します" },
+      { label:"該当する・確認したい", next:"R_SPECIAL", icon:"search", desc:"窓口で具体的な適用を確認" },
       { label:"該当しない", next:"P3S_EXLOT", icon:"arrow", desc:"既存宅地判定へ" },
     ],
   },
@@ -602,7 +626,7 @@ const STEPS = {
     question:"既存宅地に該当しますか？",
     help:"昭和45年（1970年）11月24日より前から宅地であり、かつ45戸以上の建物が連たんしている場合に該当します。\n※この日付は岡崎市で市街化区域と市街化調整区域の区分が行われた日です。",
     options:[
-      { label:"該当する", next:"P3S_ATTR", icon:"check", law:"条例別表14項", desc:"既存宅地→店舗属性の確認へ" },
+      { label:"該当する・確認したい", next:"P3S_ATTR", icon:"check", law:"条例別表14項", desc:"既存宅地→店舗属性の確認へ" },
       { label:"非該当", next:"P3S_ATTR", icon:"arrow", desc:"店舗属性の確認へ" },
       { label:"未確認", next:"CHECK_EX_LOT", icon:"help" },
     ],
@@ -620,7 +644,7 @@ const STEPS = {
     question:"別表第3の業種に該当しますか？",
     help:"別表第3の業種（大分類）：織物・衣服・身の回り品小売業 / 飲食料品小売業（コンビニ含む） / 機械器具小売業（自転車・電気） / その他の小売業（金物・薬局・燃料・書籍・花等） / 飲食店（食堂・レストラン・喫茶店） / 理容業・美容業・クリーニング / 学習塾 / はり・きゅう・柔道整復 / 郵便局 / 農業協同組合 / 自動車一般整備業 等\n※製造業・カタログ販売・訪問販売・ネット販売主体は除外",
     options:[
-      { label:"該当する", next:"P3S_DAILY_LOC", icon:"check", law:"法34条1号" },
+      { label:"該当する・確認したい", next:"P3S_DAILY_LOC", icon:"check", law:"法34条1号" },
       { label:"該当が不明", next:"R_TABLE_CONSULT", icon:"help", desc:"窓口で業種の該当性を確認" },
       { label:"非該当", next:"P3S_OTHER", icon:"x" },
     ],
@@ -628,7 +652,7 @@ const STEPS = {
   P3S_DAILY_LOC: { id:"P3S_DAILY_LOC", phase:"属性判定", lawTag:"法34条1号",
     question:"大規模既存集落に該当しますか？",
     options:[
-      { label:"該当する（180戸以上）", next:"P3S_DAILY_RES", icon:"🏙️" },
+      { label:"該当する・確認したい（180戸以上）", next:"P3S_DAILY_RES", icon:"🏙️" },
       { label:"非該当", next:"P4_SHOP", icon:"arrow", desc:"集落立地要件の確認へ" },
       { label:"未確認", next:"CHECK_CLUSTER", icon:"help" },
     ],
@@ -671,7 +695,7 @@ const STEPS = {
     conditions:["鉱物資源・観光資源の利用（法34条2号）","中小企業振興のための施設（法34条6号）","災害危険区域等からの移転（法34条8号の2）","地区計画区域内（法34条10号）"],
     conditionsLabel:"以下のいずれかに該当する場合は「該当する」を選択",
     options:[
-      { label:"該当する・確認したい", next:"R_SPECIAL", icon:"🔍", desc:"窓口で詳しくご案内します" },
+      { label:"該当する・確認したい", next:"R_SPECIAL", icon:"search" },
       { label:"該当しない", next:"P3O_EXLOT", icon:"arrow" },
     ],
   },
@@ -679,7 +703,7 @@ const STEPS = {
     question:"既存宅地に該当しますか？",
     help:"昭和45年（1970年）11月24日より前から宅地であり、かつ45戸以上の建物が連たんしている場合に該当します。\n※この日付は岡崎市で市街化区域と市街化調整区域の区分が行われた日です。",
     options:[
-      { label:"該当する", next:"P3O_ATTR", icon:"check" },
+      { label:"該当する・確認したい", next:"P3O_ATTR", icon:"check" },
       { label:"非該当", next:"P3O_ATTR", icon:"arrow" },
       { label:"未確認", next:"CHECK_EX_LOT", icon:"help" },
     ],
@@ -725,7 +749,7 @@ const STEPS = {
     conditions:["鉱物資源・観光資源の利用（法34条2号）","中小企業振興のための施設（法34条6号）","災害危険区域等からの移転（法34条8号の2）","地区計画区域内（法34条10号）"],
     conditionsLabel:"以下のいずれかに該当する場合は「該当する」を選択",
     options:[
-      { label:"該当する・確認したい", next:"R_SPECIAL", icon:"🔍", desc:"窓口で詳しくご案内します" },
+      { label:"該当する・確認したい", next:"R_SPECIAL", icon:"search" },
       { label:"該当しない", next:"P3I_EXLOT", icon:"arrow" },
     ],
   },
@@ -733,7 +757,7 @@ const STEPS = {
     question:"既存宅地に該当しますか？",
     help:"昭和45年（1970年）11月24日より前から宅地であり、かつ45戸以上の建物が連たんしている場合に該当します。\n※この日付は岡崎市で市街化区域と市街化調整区域の区分が行われた日です。",
     options:[
-      { label:"該当する", next:"P3I_ATTR", icon:"check" },
+      { label:"該当する・確認したい", next:"P3I_ATTR", icon:"check" },
       { label:"非該当", next:"P3I_ATTR", icon:"arrow" },
       { label:"未確認", next:"CHECK_EX_LOT", icon:"help" },
     ],
@@ -777,7 +801,7 @@ const STEPS = {
     question:"大規模既存集落（180戸以上）に昭和45年（1970年）11月24日より前から居住していますか？",
     help:"本人or親族が対象",
     options:[
-      { label:"該当する", next:"P4_SFAC", icon:"check", law:"条例別表9項" },
+      { label:"該当する・確認したい", next:"P4_SFAC", icon:"check", law:"条例別表9項" },
       { label:"非該当", next:"P3I_ZONE", icon:"x" },
       { label:"未確認", next:"CHECK_RESIDENCE", icon:"help" },
     ],
@@ -812,7 +836,7 @@ const STEPS = {
     conditions:["鉱物資源・観光資源の利用（法34条2号）","中小企業振興のための施設（法34条6号）","災害危険区域等からの移転（法34条8号の2）","地区計画区域内（法34条10号）"],
     conditionsLabel:"以下のいずれかに該当する場合は「該当する」を選択",
     options:[
-      { label:"該当する・確認したい", next:"R_SPECIAL", icon:"🔍", desc:"窓口で詳しくご案内します" },
+      { label:"該当する・確認したい", next:"R_SPECIAL", icon:"search" },
       { label:"該当しない", next:"P3SK_EXLOT", icon:"arrow" },
     ],
   },
@@ -820,7 +844,7 @@ const STEPS = {
     question:"既存宅地に該当しますか？",
     help:"昭和45年（1970年）11月24日より前から宅地であり、かつ45戸以上の建物が連たんしている場合に該当します。\n※この日付は岡崎市で市街化区域と市街化調整区域の区分が行われた日です。",
     options:[
-      { label:"該当する", next:"P3SK_ATTR", icon:"check" },
+      { label:"該当する・確認したい", next:"P3SK_ATTR", icon:"check" },
       { label:"非該当", next:"P3SK_ATTR", icon:"arrow" },
       { label:"未確認", next:"CHECK_EX_LOT", icon:"help" },
     ],
@@ -857,7 +881,7 @@ const STEPS = {
     conditions:["災害危険区域等からの移転（法34条8号の2）","地区計画区域内（法34条10号）"],
     conditionsLabel:"以下のいずれかに該当する場合は「該当する」を選択",
     options:[
-      { label:"該当する・確認したい", next:"R_SPECIAL", icon:"🔍", desc:"窓口で詳しくご案内します" },
+      { label:"該当する・確認したい", next:"R_SPECIAL", icon:"search" },
       { label:"該当しない", next:"P3W_EXLOT", icon:"arrow" },
     ],
   },
@@ -865,7 +889,7 @@ const STEPS = {
     question:"既存宅地に該当しますか？",
     help:"昭和45年（1970年）11月24日より前から宅地であり、かつ45戸以上の建物が連たんしている場合に該当します。\n※この日付は岡崎市で市街化区域と市街化調整区域の区分が行われた日です。",
     options:[
-      { label:"該当する", next:"P3W_SPEC", icon:"check" },
+      { label:"該当する・確認したい", next:"P3W_SPEC", icon:"check" },
       { label:"非該当", next:"P3W_SPEC", icon:"arrow" },
       { label:"未確認", next:"CHECK_EX_LOT", icon:"help" },
     ],
@@ -1226,41 +1250,6 @@ const SVG_ICONS = {
   refresh: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#ea580c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>,
   clipboard: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="8" y="2" width="8" height="4" rx="1" fill="#64748b" opacity="0.15" stroke="none"/><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>,
   square: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" fill="#9CA3AF" opacity="0.1"/></svg>,
-  // === Building / Purpose icons ===
-  house: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 01-1 1H4a1 1 0 01-1-1z" fill="#2563eb" opacity="0.1"/><polyline points="9,22 9,15 15,15 15,22"/><path d="M3 10.5L12 3l9 7.5"/></svg>,
-  house2: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 01-1 1H4a1 1 0 01-1-1z" fill="#2563eb" opacity="0.1"/><path d="M3 10.5L12 3l9 7.5"/><rect x="9" y="14" width="6" height="8" rx="0.5"/><circle cx="18" cy="18" r="3" fill="#16a34a" opacity="0.3" stroke="#16a34a"/></svg>,
-  houses: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12l6-5v14H1z" fill="#2563eb" opacity="0.15"/><path d="M9 10l6-5v16H9z" fill="#4338CA" opacity="0.12"/><path d="M17 11l6-4.5V22h-6z" fill="#2563eb" opacity="0.08"/><path d="M1 12l6-5M9 10l6-5M17 11l6-4.5"/></svg>,
-  construction: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="10" width="16" height="12" rx="1" fill="#d97706" opacity="0.1"/><path d="M4 10l8-7 8 7"/><rect x="8" y="14" width="3" height="3" rx="0.5" fill="#d97706" opacity="0.25"/><rect x="13" y="14" width="3" height="3" rx="0.5" fill="#d97706" opacity="0.25"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="10" y1="2" x2="14" y2="2"/></svg>,
-  office: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="3" width="16" height="19" rx="1.5" fill="#475569" opacity="0.1"/><rect x="7" y="6" width="3" height="2.5" rx="0.5" fill="#475569" opacity="0.2"/><rect x="14" y="6" width="3" height="2.5" rx="0.5" fill="#475569" opacity="0.2"/><rect x="7" y="11" width="3" height="2.5" rx="0.5" fill="#475569" opacity="0.2"/><rect x="14" y="11" width="3" height="2.5" rx="0.5" fill="#475569" opacity="0.2"/><rect x="10" y="17" width="4" height="5" rx="0.5" fill="#475569" opacity="0.15"/></svg>,
-  factory: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 22V14l6-4v4l6-4v4l6-4v12z" fill="#dc2626" opacity="0.1"/><rect x="3" y="2" width="4" height="10" rx="0.5" fill="#dc2626" opacity="0.15"/><path d="M5 2v-0" stroke="none"/><ellipse cx="5" cy="2" rx="2" ry="1" fill="#9CA3AF" opacity="0.3"/></svg>,
-  city: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#0369a1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="8" width="7" height="14" rx="1" fill="#0369a1" opacity="0.12"/><rect x="9" y="3" width="7" height="19" rx="1" fill="#0369a1" opacity="0.18"/><rect x="17" y="10" width="6" height="12" rx="1" fill="#0369a1" opacity="0.08"/><rect x="3" y="11" width="2" height="2" rx="0.3" fill="#0369a1" opacity="0.25"/><rect x="3" y="15" width="2" height="2" rx="0.3" fill="#0369a1" opacity="0.25"/><rect x="11" y="6" width="2" height="2" rx="0.3" fill="#0369a1" opacity="0.25"/><rect x="11" y="10" width="2" height="2" rx="0.3" fill="#0369a1" opacity="0.25"/><rect x="11" y="14" width="2" height="2" rx="0.3" fill="#0369a1" opacity="0.25"/></svg>,
-  hospital: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#be185d" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="17" rx="1.5" fill="#be185d" opacity="0.1"/><path d="M3 9h18"/><rect x="9" y="12" width="6" height="1.5" rx="0.3" fill="#be185d"/><rect x="11.25" y="9.75" width="1.5" height="6" rx="0.3" fill="#be185d"/><rect x="10" y="18" width="4" height="4" rx="0.5" fill="#be185d" opacity="0.15"/></svg>,
-  hotel: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#be185d" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="1.5" fill="#be185d" opacity="0.08"/><rect x="6" y="7" width="3" height="2.5" rx="0.5" fill="#be185d" opacity="0.2"/><rect x="15" y="7" width="3" height="2.5" rx="0.5" fill="#be185d" opacity="0.2"/><rect x="6" y="12" width="3" height="2.5" rx="0.5" fill="#be185d" opacity="0.2"/><rect x="15" y="12" width="3" height="2.5" rx="0.5" fill="#be185d" opacity="0.2"/><rect x="10" y="17" width="4" height="5" rx="0.5" fill="#be185d" opacity="0.15"/><path d="M9 4V2h6v2"/></svg>,
-  shop: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="10" width="18" height="12" rx="1" fill="#d97706" opacity="0.1"/><path d="M3 10l2-7h14l2 7" fill="#d97706" opacity="0.15"/><path d="M3 10h18"/><rect x="9" y="15" width="6" height="7" rx="0.5" fill="#d97706" opacity="0.12"/></svg>,
-  bigshop: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="17" rx="1.5" fill="#d97706" opacity="0.1"/><path d="M2 9h20"/><rect x="5" y="12" width="4" height="3" rx="0.5" fill="#d97706" opacity="0.2"/><rect x="10" y="12" width="4" height="3" rx="0.5" fill="#d97706" opacity="0.2"/><rect x="15" y="12" width="4" height="3" rx="0.5" fill="#d97706" opacity="0.2"/><rect x="9" y="18" width="6" height="4" rx="0.5" fill="#d97706" opacity="0.15"/></svg>,
-  govt: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#4338CA" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 20h20"/><path d="M4 20V10"/><path d="M20 20V10"/><path d="M2 10l10-7 10 7"/><rect x="7" y="12" width="3" height="5" rx="0.5" fill="#4338CA" opacity="0.15"/><rect x="14" y="12" width="3" height="5" rx="0.5" fill="#4338CA" opacity="0.15"/><path d="M12 3v2" fill="none"/></svg>,
-  farm: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#166534" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v6" /><path d="M9 5c0 0 3-2 6 0"/><path d="M7 8c0 0 5-3 10 0"/><rect x="2" y="14" width="20" height="8" rx="1" fill="#166534" opacity="0.1"/><line x1="6" y1="16" x2="6" y2="20" stroke="#166534" opacity="0.4"/><line x1="10" y1="16" x2="10" y2="20" stroke="#166534" opacity="0.4"/><line x1="14" y1="16" x2="14" y2="20" stroke="#166534" opacity="0.4"/><line x1="18" y1="16" x2="18" y2="20" stroke="#166534" opacity="0.4"/></svg>,
-  cart: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1.5" fill="#d97706" opacity="0.2"/><circle cx="20" cy="21" r="1.5" fill="#d97706" opacity="0.2"/><path d="M1 1h4l2.68 13.39a1 1 0 001 .81h9.72a1 1 0 001-.76L23 6H6"/></svg>,
-  road: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 22L8 2h8l4 20" fill="#64748b" opacity="0.08"/><line x1="12" y1="5" x2="12" y2="8" strokeDasharray="0"/><line x1="12" y1="11" x2="12" y2="14" strokeDasharray="0"/><line x1="12" y1="17" x2="12" y2="20" strokeDasharray="0"/></svg>,
-  truck: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="6" width="15" height="11" rx="1" fill="#64748b" opacity="0.1"/><path d="M16 9h4l3 4v4h-7V9z" fill="#64748b" opacity="0.15"/><circle cx="5.5" cy="19.5" r="2" fill="#64748b" opacity="0.2"/><circle cx="18.5" cy="19.5" r="2" fill="#64748b" opacity="0.2"/></svg>,
-  person: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#4338CA" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="7" r="4" fill="#4338CA" opacity="0.12"/><path d="M5.5 21a6.5 6.5 0 0113 0" fill="#4338CA" opacity="0.08"/></svg>,
-  family: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="6" r="3" fill="#2563eb" opacity="0.12"/><circle cx="16" cy="6" r="3" fill="#2563eb" opacity="0.12"/><circle cx="12" cy="10" r="2" fill="#6366f1" opacity="0.15"/><path d="M2 22a6 6 0 0112 0" fill="#2563eb" opacity="0.06"/><path d="M10 22a6 6 0 0112 0" fill="#2563eb" opacity="0.06"/></svg>,
-  money: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" fill="#d97706" opacity="0.1"/><path d="M12 6v12M9 9.5a3 3 0 003 3h0a3 3 0 010 6h-0M15 14.5a3 3 0 01-3 3"/></svg>,
-  ruler: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#ea580c" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 3L3 21"/><path d="M17 3l4 4"/><path d="M14.5 5.5l2 2"/><path d="M11 8l2 2"/><path d="M7.5 11.5l2 2"/><path d="M3 17l4 4"/><rect x="2" y="14" width="8" height="8" rx="1" fill="#ea580c" opacity="0.08" stroke="none"/></svg>,
-  scroll: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 00-2 2v14c0 1.1.9 2 2 2h3" fill="#7c3aed" opacity="0.06"/><path d="M16 3h3a2 2 0 012 2v14a2 2 0 01-2 2h-3"/><rect x="7" y="1" width="10" height="22" rx="1.5" fill="#7c3aed" opacity="0.1"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="9" y1="15" x2="13" y2="15"/></svg>,
-  map: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#0891b2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4z" fill="#0891b2" opacity="0.08"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>,
-  tree: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#166534" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l-7 9h4l-4 7h14l-4-7h4z" fill="#166534" opacity="0.15"/><line x1="12" y1="19" x2="12" y2="22"/></svg>,
-  wrench: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94L6.73 20.2a2 2 0 01-2.83-2.83l6.73-6.73A6 6 0 016.3 2.93l3.77 3.77"/></svg>,
-  bulb: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 00-4 12.7V17h8v-2.3A7 7 0 0012 2z" fill="#d97706" opacity="0.1"/></svg>,
-  pin: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s-8-6-8-12a8 8 0 1116 0c0 6-8 12-8 12z" fill="#dc2626" opacity="0.12"/><circle cx="12" cy="10" r="3" fill="#dc2626" opacity="0.2"/></svg>,
-  explosive: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="14" r="8" fill="#dc2626" opacity="0.1"/><path d="M12 6V2M15 4l1-2M9 4L8 2"/><line x1="12" y1="11" x2="12" y2="15"/><circle cx="12" cy="17" r="0.5" fill="#dc2626"/></svg>,
-  wheelchair: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#4338CA" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="4" r="2" fill="#4338CA" opacity="0.15"/><path d="M12 8v6"/><path d="M8 14h8l2 6"/><circle cx="10" cy="18" r="3" fill="#4338CA" opacity="0.08"/></svg>,
-  box: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#78716c" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 8v13H3V8" fill="#78716c" opacity="0.08"/><rect x="1" y="3" width="22" height="5" rx="1" fill="#78716c" opacity="0.12"/><line x1="10" y1="12" x2="14" y2="12"/></svg>,
-  hammer: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3l6 6-3 3-6-6"/><path d="M9 12L3 21"/><rect x="13" y="1" width="2" height="8" rx="1" fill="#64748b" opacity="0.15" transform="rotate(45 14 5)"/></svg>,
-  calendar: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" fill="#6366f1" opacity="0.08"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><rect x="7" y="13" width="3" height="3" rx="0.5" fill="#6366f1" opacity="0.2"/></svg>,
-  mountain: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#166534" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 20L8.5 7l4 6 3.5-5L22 20z" fill="#166534" opacity="0.12"/><path d="M6 14l2.5-3 2 2"/></svg>,
-  barrier: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="8" width="20" height="6" rx="1" fill="#d97706" opacity="0.12"/><line x1="6" y1="8" x2="10" y2="14" stroke="#d97706"/><line x1="14" y1="8" x2="18" y2="14" stroke="#d97706"/><line x1="4" y1="14" x2="4" y2="20"/><line x1="20" y1="14" x2="20" y2="20"/></svg>,
-  phone: (s) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="#4338CA" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" fill="#4338CA" opacity="0.08"/><line x1="9" y1="18" x2="15" y2="18"/></svg>,
 };
 const Icon = ({ name, size = 24, color }) => {
   const fn = SVG_ICONS[name];
@@ -1284,18 +1273,18 @@ const ProgressBar = ({ currentPhase, stepCount }) => {
   const pct = stepCount < 0 ? 100 : Math.min(95, (stepCount / maxSteps) * 100);
   const qNum = stepCount < 0 ? null : Math.max(1, stepCount + 1);
   return (
-    <div style={{ marginBottom: 32 }}>
+    <div style={{ marginBottom: 28 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
-          {qNum && <span style={{ fontSize: 28, fontWeight: 900, color: "#4338CA", letterSpacing: -1 }}>Q{qNum}</span>}
-          <span style={{ fontSize: 13, fontWeight: 700, color: "#6366F1" }}>{PHASE_ICONS[ci]} {currentPhase}</span>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+          {qNum && <span style={{ fontSize: 26, fontWeight: 800, color: "var(--hig-indigo)", letterSpacing: -0.5 }}>Q{qNum}</span>}
+          <span style={{ fontSize: 13, fontWeight: 600, color: "var(--hig-indigo)" }}>{PHASE_ICONS[ci]} {currentPhase}</span>
         </div>
-        <span style={{ fontSize: 14, fontWeight: 600, color: "#9CA3AF" }}>
+        <span style={{ fontSize: 13, fontWeight: 500, color: "var(--hig-secondary)" }}>
           {stepCount < 0 ? "完了" : `${String(stepCount + 1).padStart(2, "0")} / ${maxSteps}`}
         </span>
       </div>
-      <div style={{ position: "relative", height: 8, background: "#E5E7EB", borderRadius: 99 }}>
-        <div style={{ position: "absolute", left: 0, top: 0, height: "100%", borderRadius: 99, background: "linear-gradient(90deg, #4338CA, #6366F1)", width: `${pct}%`, transition: "width 0.4s cubic-bezier(0.4,0,0.2,1)" }} />
+      <div style={{ position: "relative", height: 6, background: "var(--hig-bg)", borderRadius: 99 }}>
+        <div style={{ position: "absolute", left: 0, top: 0, height: "100%", borderRadius: 99, background: "var(--hig-indigo)", width: `${pct}%`, transition: "width 0.4s cubic-bezier(0.4,0,0.2,1)" }} />
       </div>
     </div>
   );
@@ -1305,24 +1294,23 @@ const LawBadge = ({ law, size = "sm" }) => {
   if (!law || law === "—") return null;
   const bg = law.startsWith("法") ? "#1E3A5F" : law.startsWith("条例") ? "#7C2D12" : law.startsWith("令") ? "#4A1D96" : law.startsWith("農") ? "#166534" : law.startsWith("審") ? "#475569" : "#374151";
   const s = size === "lg" ? { fontSize: 14, padding: "6px 14px" } : { fontSize: 11, padding: "3px 8px" };
-  return <span style={{ display: "inline-block", borderRadius: 6, background: bg, color: "#fff", fontWeight: 700, whiteSpace: "nowrap", letterSpacing: 0.3, ...s }}>{law}</span>;
+  return <span style={{ display: "inline-block", borderRadius: "var(--hig-radius-xs)", background: bg, color: "#fff", fontWeight: 700, whiteSpace: "nowrap", letterSpacing: 0.3, ...s }}>{law}</span>;
 };
 
 const ConditionChecklist = ({ conditions, label, note }) => (
-  <div style={{ margin: "16px 0 20px", padding: "20px", background: "#FFFBEB", borderRadius: 16, border: "2px solid #FDE68A" }}>
-    <div style={{ fontSize: 13, fontWeight: 700, color: "#92400E", marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}>
-      <span style={{ fontSize: 18 }}>📋</span>
-      {label || "以下の要件をすべて確認してください"}
+  <div style={{ margin: "16px 0 20px", padding: "18px 20px", background: "#FFFBEB", borderRadius: "var(--hig-radius)", border: "0.5px solid #FDE68A" }}>
+    <div style={{ fontSize: 13, fontWeight: 600, color: "#92400E", marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}>
+      📋 {label || "以下の要件をすべて確認してください"}
     </div>
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
       {conditions.map((c, i) => (
-        <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", background: "#fff", borderRadius: 12, border: "1px solid #FDE68A", fontSize: 15, fontWeight: 600, color: "#1F2937", lineHeight: 1.5 }}>
-          <div style={{ width: 32, height: 32, borderRadius: 8, background: "#FEF3C7", color: "#D97706", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, flexShrink: 0 }}>{i + 1}</div>
+        <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: "#fff", borderRadius: "var(--hig-radius-sm)", fontSize: 14, fontWeight: 500, color: "var(--hig-label)", lineHeight: 1.5 }}>
+          <div style={{ width: 28, height: 28, borderRadius: "var(--hig-radius-xs)", background: "#FEF3C7", color: "#D97706", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
           <span>{c}</span>
         </div>
       ))}
     </div>
-    {note && <div style={{ marginTop: 12, fontSize: 12, color: "#92400E", lineHeight: 1.6, padding: "10px 14px", background: "#FEF3C7", borderRadius: 8}}>💡 {note}</div>}
+    {note && <div style={{ marginTop: 10, fontSize: 12, color: "#92400E", lineHeight: 1.6, padding: "10px 14px", background: "#FEF3C7", borderRadius: "var(--hig-radius-xs)" }}>💡 {note}</div>}
   </div>
 );
 
@@ -1330,19 +1318,19 @@ const HowToCheckPanel = ({ howTo }) => {
   const data = HOW_TO_CHECK[howTo];
   if (!data) return null;
   return (
-    <div style={{ margin: "0 0 24px", padding: "20px", background: "#EEF2FF", borderRadius: 16, border: "2px solid #C7D2FE" }}>
-      <div style={{ fontSize: 15, fontWeight: 800, color: "#4338CA", marginBottom: 6, display: "flex", alignItems: "center", gap: 8 }}>
-        <span style={{ fontSize: 20 }}>🔍</span>{data.title}
+    <div style={{ margin: "0 0 24px", padding: "18px 20px", background: "#EEEDF9", borderRadius: "var(--hig-radius)", border: "0.5px solid rgba(88,86,214,0.15)" }}>
+      <div style={{ fontSize: 14, fontWeight: 700, color: "var(--hig-indigo)", marginBottom: 6, display: "flex", alignItems: "center", gap: 8 }}>
+        🔍 {data.title}
       </div>
-      {data.note && <div style={{ fontSize: 12, color: "#6366F1", marginBottom: 12, fontWeight: 600, lineHeight: 1.5 }}>{data.note}</div>}
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      {data.note && <div style={{ fontSize: 12, color: "var(--hig-indigo)", opacity: 0.7, marginBottom: 12, fontWeight: 500, lineHeight: 1.5 }}>{data.note}</div>}
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         {data.items.map((item, i) => (
-          <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "14px 16px", background: "#fff", borderRadius: 12, border: "1px solid #E0E7FF" }}>
+          <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 14px", background: "#fff", borderRadius: "var(--hig-radius-sm)", border: "0.5px solid rgba(88,86,214,0.1)" }}>
             <span style={{ fontSize: 24, flexShrink: 0, lineHeight: 1 }}>{item.icon}</span>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: "#1F2937", lineHeight: 1.4 }}>{item.method}</div>
               <div style={{ fontSize: 12, color: "#6B7280", marginTop: 2, lineHeight: 1.5 }}>{item.detail}</div>
-              {item.url && <div style={{ fontSize: 11, color: "#4338CA", marginTop: 4, wordBreak: "break-all"}}>🔗 {item.url}</div>}
+              {item.url && <div style={{ fontSize: 11, color: "#4338CA", marginTop: 4, wordBreak: "break-all" }}>🔗 {item.url}</div>}
             </div>
           </div>
         ))}
@@ -1356,23 +1344,24 @@ const OptionCard = ({ opt, onClick, index, totalOptions }) => {
   return (
     <button onClick={onClick} style={{
       display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-      width: "100%", minHeight: isWide ? 140 : 160,
-      padding: "28px 20px 22px",
-      background: "#FAFAFA", border: "2px solid #E5E7EB", borderRadius: 16,
+      width: "100%", minHeight: isWide ? 130 : 150,
+      padding: "24px 18px 20px",
+      background: "var(--hig-card)", border: "0.5px solid var(--hig-separator)", borderRadius: "var(--hig-radius)",
       cursor: "pointer", textAlign: "center",
+      boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
       transition: "all 0.2s cubic-bezier(0.4,0,0.2,1)",
       animation: `cardIn 0.35s cubic-bezier(0.16,1,0.3,1) ${index * 0.06}s both`,
     }}
-      onMouseEnter={e => { e.currentTarget.style.borderColor = "#6366F1"; e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 12px 32px rgba(99,102,241,0.18)"; e.currentTarget.style.background = "#fff"; }}
-      onMouseLeave={e => { e.currentTarget.style.borderColor = "#E5E7EB"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.background = "#FAFAFA"; }}>
+      onMouseEnter={e => { e.currentTarget.style.background = "var(--hig-bg)"; e.currentTarget.style.boxShadow = "var(--hig-shadow-hover)"; }}
+      onMouseLeave={e => { e.currentTarget.style.background = "var(--hig-card)"; e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)"; }}>
       {SVG_ICONS[opt.icon] ? (
-        <div style={{ width: 56, height: 56, flexShrink: 0, marginBottom: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>{SVG_ICONS[opt.icon](48)}</div>
+        <div style={{ width: 52, height: 52, flexShrink: 0, marginBottom: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>{SVG_ICONS[opt.icon](44)}</div>
       ) : (
-        <div style={{ fontSize: 56, lineHeight: 1, flexShrink: 0, marginBottom: 12, filter: "drop-shadow(0 3px 6px rgba(0,0,0,0.1))" }}>{opt.icon}</div>
+        <div style={{ fontSize: 48, lineHeight: 1, flexShrink: 0, marginBottom: 10 }}>{opt.icon}</div>
       )}
       <div>
-        <div style={{ fontSize: 17, fontWeight: 700, color: "#1F2937", lineHeight: 1.4 }}>{opt.label}</div>
-        {opt.desc && <div style={{ fontSize: 12, color: "#6B7280", marginTop: 5, lineHeight: 1.5 }}>{opt.desc}</div>}
+        <div style={{ fontSize: 16, fontWeight: 700, color: "var(--hig-label)", lineHeight: 1.4 }}>{opt.label}</div>
+        {opt.desc && <div style={{ fontSize: 12, color: "var(--hig-secondary)", marginTop: 4, lineHeight: 1.5, fontWeight: 400 }}>{opt.desc}</div>}
         {opt.law && <div style={{ marginTop: 6 }}><LawBadge law={opt.law} /></div>}
       </div>
     </button>
@@ -1432,85 +1421,101 @@ const ResultScreen = ({ step, prov, trail, dp, onBack, onRestart }) => {
   }, [showQR, trail]);
 
   return (
-    <div style={{ animation: "resultIn 0.5s cubic-bezier(0.16,1,0.3,1)" }}>
-      <div style={{ textAlign: "center", padding: "32px 24px", background: isPositive ? "linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)" : "linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%)", borderRadius: 20, marginBottom: 24, border: `2px solid ${isPositive ? "#A7F3D0" : "#FED7AA"}` }}>
-        <div style={{ marginBottom: 12, display: "flex", justifyContent: "center" }}>{isPositive ? SVG_ICONS.check(56) : SVG_ICONS.warn(56)}</div>
-        <h2 style={{ fontSize: 20, fontWeight: 800, color: "#1F2937", lineHeight: 1.5, marginBottom: 8 }}>{step.title}</h2>
-        {p && <div style={{ display: "flex", justifyContent: "center", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
+    <div style={{ animation: "cardIn 0.5s cubic-bezier(0.16,1,0.3,1)" }}>
+      <div style={{ textAlign: "center", padding: "28px 24px", background: isPositive ? "#F0FFF4" : "#FFFBF0", borderRadius: "var(--hig-radius)", marginBottom: 20, border: `0.5px solid ${isPositive ? "rgba(52,199,89,0.2)" : "rgba(255,149,0,0.2)"}` }}>
+        <div style={{ marginBottom: 10, fontSize: 48 }}>{isPositive ? "✅" : "⚠️"}</div>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: "var(--hig-label)", lineHeight: 1.5, marginBottom: 8 }}>{step.title}</h2>
+        {p && <div style={{ display: "flex", justifyContent: "center", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
           <LawBadge law={p.law} size="lg" />
-          <span style={{ fontSize: 14, fontWeight: 700, color: p.color, background: "#fff", padding: "5px 14px", borderRadius: 8, border: `1px solid ${p.color}22` }}>{p.icon} {p.label}</span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: p.color, background: "var(--hig-card)", padding: "5px 14px", borderRadius: "var(--hig-radius-xs)", border: `0.5px solid ${p.color}33` }}>{p.icon} {p.label}</span>
         </div>}
       </div>
-      <div style={{ padding: "20px 24px", background: "#F9FAFB", borderRadius: 16, borderLeft: `4px solid ${p?.color || "#6366F1"}`, marginBottom: 20, fontSize: 14, lineHeight: 1.8, color: "#374151" }}>{step.message}</div>
-      {step.techRef && <div style={{ padding: "16px 20px", background: "#EEF2FF", borderRadius: 12, marginBottom: 16, fontSize: 13, lineHeight: 1.6, color: "#4338CA", border: "1px solid #C7D2FE" }}>
-        <div style={{ fontWeight: 700, marginBottom: 4 }}>📖 技術基準・協議先</div>{step.techRef}
+      <div style={{ padding: "18px 20px", background: "var(--hig-bg)", borderRadius: "var(--hig-radius)", borderLeft: `3px solid ${p?.color || "var(--hig-indigo)"}`, marginBottom: 18, fontSize: 14, lineHeight: 1.8, color: "var(--hig-label)" }}>{step.message}</div>
+      {step.techRef && <div style={{ padding: "14px 18px", background: "#EEEDF9", borderRadius: "var(--hig-radius-sm)", marginBottom: 14, fontSize: 13, lineHeight: 1.6, color: "var(--hig-indigo)" }}>
+        <div style={{ fontWeight: 600, marginBottom: 4 }}>📖 技術基準・協議先</div>{step.techRef}
       </div>}
-      {step.agriNote && <div style={{ padding: "16px 20px", background: "#FEF3C7", borderRadius: 12, marginBottom: 16, fontSize: 13, lineHeight: 1.6, color: "#92400E", border: "1px solid #FDE68A" }}>
-        <div style={{ fontWeight: 700, marginBottom: 4 }}>🌾 農地に関する注意</div>{step.agriNote}
+      {step.agriNote && <div style={{ padding: "14px 18px", background: "#FEF3C7", borderRadius: "var(--hig-radius-sm)", marginBottom: 14, fontSize: 13, lineHeight: 1.6, color: "#92400E" }}>
+        <div style={{ fontWeight: 600, marginBottom: 4 }}>🌾 農地に関する注意</div>{step.agriNote}
       </div>}
-      {step.nextSteps?.length > 0 && <div style={{ marginBottom: 24 }}>
-        <h3 style={{ fontSize: 15, fontWeight: 700, color: "#4338CA", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}><span style={{ fontSize: 20 }}>📋</span> 次のステップ</h3>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      {step.nextSteps?.length > 0 && <div style={{ marginBottom: 20 }}>
+        <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--hig-indigo)", marginBottom: 10 }}>📋 次のステップ</h3>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {step.nextSteps.map((s, i) => (
-            <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "12px 16px", background: "#fff", borderRadius: 12, border: "1px solid #E5E7EB" }}>
-              <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#EEF2FF", color: "#4338CA", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
-              <span style={{ fontSize: 14, color: "#374151", lineHeight: 1.6 }}>{s}</span>
+            <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "10px 14px", background: "var(--hig-bg)", borderRadius: "var(--hig-radius-sm)" }}>
+              <div style={{ width: 24, height: 24, borderRadius: "50%", background: "var(--hig-indigo)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
+              <span style={{ fontSize: 13, color: "var(--hig-label)", lineHeight: 1.6 }}>{s}</span>
             </div>
           ))}
         </div>
       </div>}
-      <details open style={{ marginBottom: 24 }}>
-        <summary style={{ cursor: "pointer", fontSize: 14, fontWeight: 600, color: "#6B7280", padding: "12px 0", display: "flex", alignItems: "center", gap: 8 }}><span style={{ fontSize: 16 }}>📊</span> 判定フロー票（相談記録）— {trail.length}ステップ</summary>
-        <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 12, overflow: "hidden", marginTop: 8 }}>
-          <div style={{ padding: "14px 16px", background: "#1E3A5F", color: "#fff", fontSize: 13, fontWeight: 700, textAlign: "center" }}>
-            <div>岡崎市 開発相談ナビ 判定フロー票</div>
-            <div style={{ fontSize: 11, fontWeight: 400, marginTop: 4, opacity: 0.8 }}>作成日: {new Date().toLocaleDateString("ja-JP")} — 本記録は相談内容の参考資料です</div>
-          </div>
-          {trail.map((e, i) => (
-            <div key={i} style={{ padding: "10px 16px", borderBottom: "1px solid #F3F4F6", background: i % 2 === 0 ? "#fff" : "#FAFAFA" }}>
-              <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-                <span style={{ width: 24, height: 24, borderRadius: "50%", flexShrink: 0, background: "#EEF2FF", color: "#4338CA", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, marginTop: 2 }}>{i + 1}</span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 2 }}>{e.phase}{e.stepLaw && e.stepLaw !== "—" ? ` — ${e.stepLaw}` : ""}</div>
-                  <div style={{ fontSize: 12, color: "#6B7280", lineHeight: 1.4, marginBottom: 3 }}>{e.question}</div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: "#1F2937" }}>{e.answer}</span>
-                    <LawBadge law={e.law} />
+      <div style={{ background: "var(--hig-card)", borderRadius: "var(--hig-radius)", border: "0.5px solid var(--hig-separator)", overflow: "hidden", marginBottom: 16 }}>
+        <details>
+          <summary style={{ cursor: "pointer", padding: "14px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", listStyle: "none", WebkitAppearance: "none" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 18 }}>📊</span>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "var(--hig-label)" }}>判定フロー票を確認する</div>
+                <div style={{ fontSize: 11, color: "var(--hig-secondary)", marginTop: 2 }}>{trail.length}ステップの回答記録</div>
+              </div>
+            </div>
+            <span style={{ fontSize: 16, color: "var(--hig-tertiary)" }}>›</span>
+          </summary>
+          <div style={{ borderTop: "0.5px solid var(--hig-separator)" }}>
+            <div style={{ padding: "10px 16px", background: "var(--hig-indigo)", color: "#fff", fontSize: 12, fontWeight: 600, textAlign: "center" }}>
+              <div>岡崎市 開発相談ナビ 判定フロー票</div>
+              <div style={{ fontSize: 10, fontWeight: 400, marginTop: 3, opacity: 0.8 }}>作成日: {new Date().toLocaleDateString("ja-JP")}</div>
+            </div>
+            {trail.map((e, i) => (
+              <div key={i} style={{ padding: "8px 14px", borderBottom: "0.5px solid var(--hig-separator)", background: i % 2 === 0 ? "var(--hig-card)" : "var(--hig-bg)" }}>
+                <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                  <span style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, background: "#EEEDF9", color: "var(--hig-indigo)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, marginTop: 1 }}>{i + 1}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 10, color: "var(--hig-secondary)", marginBottom: 1 }}>{e.phase}{e.stepLaw && e.stepLaw !== "—" ? ` — ${e.stepLaw}` : ""}</div>
+                    <div style={{ fontSize: 11, color: "var(--hig-secondary)", lineHeight: 1.4, marginBottom: 2 }}>{e.question}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "var(--hig-label)" }}>{e.answer}</span>
+                      <LawBadge law={e.law} />
+                    </div>
                   </div>
                 </div>
               </div>
+            ))}
+            <div style={{ padding: "10px 14px", background: "var(--hig-bg)", fontSize: 10, color: "var(--hig-secondary)", lineHeight: 1.5 }}>
+              ※ 正式な許可判断は建築指導課の審査により行われます。
             </div>
-          ))}
-          <div style={{ padding: "12px 16px", background: "#F9FAFB", borderTop: "2px solid #E5E7EB", fontSize: 11, color: "#6B7280", lineHeight: 1.6 }}>
-            <div>※ 本判定フロー票は開発相談ナビによる参考判定の記録です。正式な許可判断は建築指導課の審査により行われます。</div>
           </div>
+        </details>
+        <div style={{ borderTop: "0.5px solid var(--hig-separator)" }}>
+          <button onClick={() => setShowQR(!showQR)} style={{ width: "100%", padding: "14px 18px", background: "transparent", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", transition: "background 0.15s" }}
+            onMouseEnter={e => e.currentTarget.style.background = "var(--hig-bg)"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 18 }}>📱</span>
+              <div style={{ textAlign: "left" }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "var(--hig-label)" }}>QRコードで持ち帰る</div>
+                <div style={{ fontSize: 11, color: "var(--hig-secondary)", marginTop: 2 }}>スマホで読み取って記録を保存</div>
+              </div>
+            </div>
+            <span style={{ fontSize: 16, color: "var(--hig-tertiary)" }}>{showQR ? "▾" : "›"}</span>
+          </button>
+          {showQR && (
+            <div style={{ padding: "16px 20px", borderTop: "0.5px solid var(--hig-separator)", textAlign: "center", animation: "cardIn 0.25s ease" }}>
+              {qrError ? (
+                <div style={{ fontSize: 13, color: "var(--hig-red)", lineHeight: 1.6 }}>{qrError}</div>
+              ) : (
+                <>
+                  <canvas ref={qrCanvasRef} style={{ width: 240, height: 240, imageRendering: "pixelated", borderRadius: 8 }} />
+                  <div style={{ marginTop: 10, fontSize: 11, color: "var(--hig-secondary)", lineHeight: 1.6 }}>
+                    テキストを「コピー」して、メールやメモに貼り付けてご利用ください。
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </div>
-      </details>
-      <div style={{ textAlign: "center", marginBottom: 16 }}>
-        <button onClick={() => setShowQR(!showQR)} style={{ padding: "12px 24px", background: showQR ? "#F3F4F6" : "#EEF2FF", color: showQR ? "#6B7280" : "#4338CA", border: `2px solid ${showQR ? "#E5E7EB" : "#C7D2FE"}`, borderRadius: 12, cursor: "pointer", fontSize: 14, fontWeight: 700, transition: "all 0.2s" }}>
-          {showQR ? "✕ 閉じる" : "📱 QRコードで持ち帰る"}
-        </button>
-        {showQR && (
-          <div style={{ marginTop: 16, padding: "20px", background: "#fff", borderRadius: 16, border: "2px solid #E5E7EB", animation: "cardIn 0.3s ease" }}>
-            {qrError ? (
-              <div style={{ fontSize: 13, color: "#DC2626", lineHeight: 1.6, padding: "12px 16px", background: "#FEF2F2", borderRadius: 8 }}>{qrError}</div>
-            ) : (
-              <>
-                <canvas ref={qrCanvasRef} style={{ width: 240, height: 240, imageRendering: "pixelated", borderRadius: 8 }} />
-                <div style={{ marginTop: 14, fontSize: 13, color: "#374151", lineHeight: 1.7, textAlign: "left", maxWidth: 360, margin: "14px auto 0" }}>
-                  <div style={{ marginBottom: 6 }}>スマートフォンのカメラで読み取ると、判定フロー票がテキストで表示されます。</div>
-                  <div style={{ color: "#6B7280", fontSize: 12 }}>表示されたテキストを「コピー」して、メールやメモアプリに貼り付けてご利用ください。</div>
-                </div>
-              </>
-            )}
-          </div>
-        )}
       </div>
-      <div style={{ display: "flex", gap: 12 }}>
-        <button onClick={onBack} style={{ flex: 1, padding: "16px", background: "#F3F4F6", color: "#374151", border: "2px solid #E5E7EB", borderRadius: 14, cursor: "pointer", fontSize: 15, fontWeight: 700 }}
-          onMouseEnter={e => e.currentTarget.style.background = "#E5E7EB"} onMouseLeave={e => e.currentTarget.style.background = "#F3F4F6"}>← 戻る</button>
-        <button onClick={onRestart} style={{ flex: 1, padding: "16px", background: "linear-gradient(135deg, #4338CA, #6366F1)", color: "#fff", border: "none", borderRadius: 14, cursor: "pointer", fontSize: 15, fontWeight: 700, boxShadow: "0 4px 14px rgba(99,102,241,0.3)" }}
-          onMouseEnter={e => e.currentTarget.style.transform = "translateY(-1px)"} onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}>🔄 最初からやり直す</button>
+      <div style={{ display: "flex", gap: 10 }}>
+        <button onClick={onBack} style={{ flex: 1, padding: "14px", background: "var(--hig-bg)", color: "var(--hig-label)", border: "0.5px solid var(--hig-separator)", borderRadius: "var(--hig-radius-sm)", cursor: "pointer", fontSize: 14, fontWeight: 600 }}>‹ 戻る</button>
+        <button onClick={onRestart} style={{ flex: 1, padding: "14px", background: "var(--hig-indigo)", color: "#fff", border: "none", borderRadius: "var(--hig-radius-sm)", cursor: "pointer", fontSize: 14, fontWeight: 600 }}>最初からやり直す</button>
       </div>
     </div>
   );
@@ -1520,45 +1525,43 @@ const LandingScreen = ({ onStart }) => (
   <div style={{ textAlign: "center", padding: "20px 0", animation: "cardIn 0.5s cubic-bezier(0.16,1,0.3,1)" }}>
     <div style={{ marginBottom: 20, filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.08))" }}>
       <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
-        <rect x="8" y="12" width="48" height="60" rx="4" fill="#EEF2FF" stroke="#4338CA" strokeWidth="2"/>
+        <rect x="8" y="12" width="48" height="60" rx="4" fill="#EEF2FF" stroke="#5856D6" strokeWidth="2"/>
         <line x1="16" y1="24" x2="40" y2="24" stroke="#A5B4FC" strokeWidth="2" strokeLinecap="round"/>
         <line x1="16" y1="32" x2="48" y2="32" stroke="#A5B4FC" strokeWidth="2" strokeLinecap="round"/>
         <line x1="16" y1="40" x2="44" y2="40" stroke="#A5B4FC" strokeWidth="2" strokeLinecap="round"/>
         <line x1="16" y1="48" x2="36" y2="48" stroke="#A5B4FC" strokeWidth="2" strokeLinecap="round"/>
-        <rect x="40" y="36" width="32" height="36" rx="3" fill="#fff" stroke="#4338CA" strokeWidth="2"/>
+        <rect x="40" y="36" width="32" height="36" rx="3" fill="#fff" stroke="#5856D6" strokeWidth="2"/>
         <rect x="46" y="42" width="8" height="6" rx="1" fill="#A5B4FC"/>
         <rect x="58" y="42" width="8" height="6" rx="1" fill="#A5B4FC"/>
         <rect x="46" y="52" width="8" height="6" rx="1" fill="#A5B4FC"/>
         <rect x="58" y="52" width="8" height="6" rx="1" fill="#A5B4FC"/>
-        <rect x="52" y="62" width="8" height="10" rx="1" fill="#4338CA" opacity="0.3"/>
-        <circle cx="60" cy="20" r="12" fill="#4338CA" opacity="0.12"/>
-        <path d="M56 20l3 3 5-5" stroke="#4338CA" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <rect x="52" y="62" width="8" height="10" rx="1" fill="#5856D6" opacity="0.3"/>
+        <circle cx="60" cy="20" r="12" fill="#5856D6" opacity="0.12"/>
+        <path d="M56 20l3 3 5-5" stroke="#5856D6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     </div>
-    <h2 style={{ fontSize: 28, fontWeight: 800, color: "#1F2937", lineHeight: 1.5, marginBottom: 12 }}>開発許可の要否を<br />かんたん診断</h2>
-    <p style={{ fontSize: 16, color: "#6B7280", lineHeight: 1.8, maxWidth: 480, margin: "0 auto 28px" }}>いくつかの質問に答えるだけで、あなたの建築計画に必要な手続きがわかります。</p>
-    <button onClick={onStart} style={{ width: "100%", maxWidth: 440, padding: "20px 36px", background: "linear-gradient(135deg, #4338CA, #6366F1)", color: "#fff", border: "none", borderRadius: 16, cursor: "pointer", fontSize: 20, fontWeight: 800, letterSpacing: 1, boxShadow: "0 6px 20px rgba(99,102,241,0.35)", transition: "all 0.2s", marginBottom: 32 }}
-      onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 30px rgba(99,102,241,0.45)"; }}
-      onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 6px 20px rgba(99,102,241,0.35)"; }}>
-      診断をはじめる →
+    <h2 style={{ fontSize: 26, fontWeight: 800, color: "var(--hig-label)", lineHeight: 1.5, marginBottom: 10, letterSpacing: -0.5 }}>開発許可の要否を<br />かんたん診断</h2>
+    <p style={{ fontSize: 15, color: "var(--hig-secondary)", lineHeight: 1.8, maxWidth: 460, margin: "0 auto 28px", fontWeight: 400 }}>いくつかの質問に答えるだけで、あなたの建築計画に必要な手続きがわかります。</p>
+    <button onClick={onStart} style={{ width: "100%", maxWidth: 400, padding: "17px 36px", background: "var(--hig-indigo)", color: "#fff", border: "none", borderRadius: 14, cursor: "pointer", fontSize: 18, fontWeight: 700, letterSpacing: 0.5, boxShadow: "0 4px 14px rgba(88,86,214,0.3)", transition: "all 0.2s", marginBottom: 32 }}>
+      診断をはじめる
     </button>
     <div style={{ margin: "0 auto", maxWidth: 400, textAlign: "left" }}>
-      <div style={{ fontSize: 13, fontWeight: 700, color: "#9A3412", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
-        <span style={{ fontSize: 16 }}>⚠️</span> 本システムで判定できないこと
+      <div style={{ fontSize: 13, fontWeight: 600, color: "var(--hig-secondary)", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
+        本システムで判定できないこと
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
         {[
-          { icon: "🚧", label: "接道要件", sub: "→ 建築指導課へ" },
-          { icon: "📋", label: "建築確認", sub: "→ 建築指導課へ" },
+          { icon: "🛣️", label: "接道要件", sub: "→ 建築指導課へ" },
+          { icon: "🏠", label: "建築確認", sub: "→ 建築指導課へ" },
           { icon: "🌾", label: "農地転用", sub: "→ 農業委員会へ" },
         ].map(item => (
-          <div key={item.label} style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "18px 8px 14px", background: "#FFF7ED", borderRadius: 14, border: "1px solid #FED7AA", textAlign: "center" }}>
+          <div key={item.label} style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "16px 8px 12px", background: "var(--hig-bg)", borderRadius: "var(--hig-radius-sm)", textAlign: "center" }}>
             <div style={{ position: "relative", marginBottom: 8 }}>
-              <span style={{ fontSize: 36, lineHeight: 1, opacity: 0.4 }}>{item.icon}</span>
-              <span style={{ position: "absolute", top: -4, right: -8, fontSize: 22, filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.2))" }}>❌</span>
+              <span style={{ fontSize: 32, lineHeight: 1, opacity: 0.35 }}>{item.icon}</span>
+              <span style={{ position: "absolute", top: -4, right: -8, fontSize: 18 }}>❌</span>
             </div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#1F2937", lineHeight: 1.3 }}>{item.label}</div>
-            <div style={{ fontSize: 10, color: "#9A3412", marginTop: 2 }}>{item.sub}</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--hig-label)", lineHeight: 1.3 }}>{item.label}</div>
+            <div style={{ fontSize: 10, color: "var(--hig-secondary)", marginTop: 2 }}>{item.sub}</div>
           </div>
         ))}
       </div>
@@ -1597,23 +1600,32 @@ function App() {
   const gridCols = step.options ? (step.options.length <= 2 ? "1fr 1fr" : "1fr 1fr 1fr") : "1fr 1fr";
 
   return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(180deg, #F8FAFC 0%, #EEF2FF 50%, #F8FAFC 100%)", display: "flex", justifyContent: "center", padding: "24px 40px" }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;800;900&display=swap');
-        * { box-sizing: border-box; margin: 0; font-family: 'Noto Sans JP', sans-serif; }
-        @keyframes cardIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes resultIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
-        button:active { transform: scale(0.97) !important; }
-      `}</style>
-      <div ref={mainRef} style={{ width: "100%", maxWidth: 960 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, animation: "cardIn 0.3s ease", padding: "0 4px" }}>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
-            <span style={{ fontSize: 20, fontWeight: 900, color: "#1F2937", letterSpacing: 2 }}>開発相談ナビ</span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#9CA3AF", letterSpacing: 1 }}>岡崎市版</span>
+    <div style={{ minHeight: "100vh", background: "var(--hig-bg)", display: "flex", justifyContent: "center", padding: "0 40px 24px" }}>
+      <div ref={mainRef} style={{ width: "100%", maxWidth: 960, paddingTop: 16 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, padding: "8px 4px" }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+            <span style={{ fontSize: 18, fontWeight: 800, color: "var(--hig-label)", letterSpacing: 1 }}>開発相談ナビ</span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: "var(--hig-tertiary)" }}>岡崎市版</span>
           </div>
-          <div style={{ fontSize: 11, color: "#9CA3AF" }}>岡崎市 都市政策部 建築指導課</div>
+          <svg height="18" viewBox="0 0 1430 375" style={{ opacity: 0.35, marginRight: 12 }}>
+            <defs>
+              <linearGradient id="mbirs-g1" x1="415.35" y1="420.35" x2="145.49" y2="150.49" gradientUnits="userSpaceOnUse">
+                <stop offset=".16" stopColor="#0e3163"/><stop offset="1" stopColor="#00a7fb"/>
+              </linearGradient>
+              <linearGradient id="mbirs-g2" x1="456.61" y1="379.1" x2="186.75" y2="109.24" gradientUnits="userSpaceOnUse">
+                <stop offset=".16" stopColor="#0e3163"/><stop offset="1" stopColor="#00a7fb"/>
+              </linearGradient>
+            </defs>
+            <path fill="url(#mbirs-g1)" d="M315,37.5h-62.32c-3.32,0-6.49,1.32-8.84,3.66L41.16,243.84c-2.34,2.34-3.66,5.52-3.66,8.84v72.32c0,6.9,5.6,12.5,12.5,12.5h52.32c3.32,0,6.49-1.32,8.84-3.66l212.68-212.68c2.34-2.34,3.66-5.52,3.66-8.84v-62.32c0-6.9-5.6-12.5-12.5-12.5Z"/>
+            <path fill="url(#mbirs-g2)" d="M417.5,217.5v-82.5c0-6.9-5.6-12.5-12.5-12.5h-67.32c-3.32,0-6.5,1.32-8.84,3.66l-127.65,127.68c-2.34,2.34-3.66,5.52-3.66,8.84v62.32c0,6.9,5.6,12.5,12.5,12.5h67.3c3.32,0,6.49-1.32,8.84-3.66l91.34-91.34v65l30,30h90v-120h-80ZM399.5,231.5h-8v8h-4v-12h12v4ZM487.5,327.5h-12v-4h8v-8h4v12ZM487.5,239.5h-4v-8h-8v-4h12v12Z"/>
+            <path fill="#1C1C1E" d="M665,138.75h-127.5v168.75h37.5v-131.25h37.5v131.25h37.5v-131.25h12.5c13.81,0,25,11.19,25,25v106.25h37.5v-108.75c0-33.14-26.86-60-60-60Z"/>
+            <path fill="#1C1C1E" d="M862.5,82.5h-100v225h100c33.14,0,60-26.86,60-60v-7.76c0-16.58-6.86-32.43-18.96-43.77l-1.04-.97,1.04-.97c12.1-11.34,18.96-27.19,18.96-43.77v-7.76c0-33.14-26.86-60-60-60ZM882.5,245c0,13.81-11.19,25-25,25h-55v-56.25h55c13.81,0,25,11.19,25,25v6.25ZM882.5,151.25c0,13.81-11.19,25-25,25h-55v-56.25h55c13.81,0,25,11.19,25,25v6.25Z"/>
+            <rect fill="#1C1C1E" x="960" y="82.5" width="37.5" height="37.5"/><rect fill="#1C1C1E" x="960" y="138.75" width="37.5" height="168.75"/>
+            <path fill="#1C1C1E" d="M1195,153.75v-11.25c0-33.14-26.86-60-60-60h-100v225h40v-93.75h34l50,93.75h44l-51.27-96.13c24.99-7.24,43.27-30.29,43.27-57.62ZM1075,120h55c13.81,0,25,11.19,25,25v6.25c0,13.81-11.19,25-25,25h-55v-56.25Z"/>
+            <path fill="#1C1C1E" d="M1332.5,176.25h-35c-13.81,0-25-11.19-25-25v-6.25c0-13.81,11.19-25,25-25h85v-37.5h-90c-33.14,0-60,26.86-60,60v11.25c0,33.14,26.86,60,60,60h35c13.81,0,25,11.19,25,25v6.25c0,13.81-11.19,25-25,25h-85v37.5h90c33.14,0,60-26.86,60-60v-11.25c0-33.14-26.86-60-60-60Z"/>
+          </svg>
         </div>
-        <div style={{ background: "#FFFFFF", borderRadius: 24, padding: "36px 40px 40px", border: "1px solid #E5E7EB", boxShadow: "0 4px 24px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}>
+        <div style={{ background: "var(--hig-card)", borderRadius: 20, padding: "32px 36px 36px", boxShadow: "var(--hig-shadow)", border: "0.5px solid var(--hig-separator)" }}>
           {!started ? (
             <LandingScreen onStart={() => setStarted(true)} />
           ) : step.type === "result" ? (
@@ -1627,11 +1639,11 @@ function App() {
               <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
                 <LawBadge law={step.lawTag} size="sm" />
               </div>
-              <h2 style={{ fontSize: 26, fontWeight: 800, color: "#111827", lineHeight: 1.6, marginBottom: 12 }}>{step.question}</h2>
+              <h2 style={{ fontSize: 24, fontWeight: 700, color: "var(--hig-label)", lineHeight: 1.5, marginBottom: 12, letterSpacing: -0.3 }}>{step.question}</h2>
               {step.type === "check" && step.howTo && <HowToCheckPanel howTo={step.howTo} />}
               {step.conditions && <ConditionChecklist conditions={step.conditions} label={step.conditionsLabel} note={step.conditionsNote} />}
               {step.help && !step.conditions && (
-                <div style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.8, marginBottom: 24, whiteSpace: "pre-line", padding: "16px 20px", background: "#F9FAFB", borderRadius: 12, border: "1px solid #F3F4F6" }}>💡 {step.help}</div>
+                <div style={{ fontSize: 13, color: "var(--hig-secondary)", lineHeight: 1.8, marginBottom: 24, whiteSpace: "pre-line", padding: "14px 18px", background: "var(--hig-bg)", borderRadius: "var(--hig-radius-sm)" }}>💡 {step.help}</div>
               )}
               <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: 16 }}>
                 {step.options.map((opt, i) => (
@@ -1639,16 +1651,16 @@ function App() {
                 ))}
               </div>
               {hist.length > 0 && (
-                <button onClick={back} style={{ marginTop: 20, padding: "10px 16px", background: "none", border: "none", color: "#9CA3AF", cursor: "pointer", fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 4, transition: "color 0.2s" }}
-                  onMouseEnter={e => e.currentTarget.style.color = "#4B5563"} onMouseLeave={e => e.currentTarget.style.color = "#9CA3AF"}>← 前の質問に戻る</button>
+                <button onClick={back} style={{ marginTop: 20, padding: "10px 16px", background: "none", border: "none", color: "var(--hig-indigo)", cursor: "pointer", fontSize: 14, fontWeight: 600, display: "flex", alignItems: "center", gap: 4, transition: "opacity 0.2s" }}
+                  onMouseEnter={e => e.currentTarget.style.opacity = "0.6"} onMouseLeave={e => e.currentTarget.style.opacity = "1"}>‹ 前の質問に戻る</button>
               )}
             </div>
           )}
         </div>
-        <div style={{ textAlign: "center", marginTop: 16, fontSize: 11, color: "#9CA3AF", lineHeight: 1.7 }}>
+        <div style={{ textAlign: "center", marginTop: 20, fontSize: 11, color: "var(--hig-secondary)", lineHeight: 1.8 }}>
           <div>本システムの判定は参考情報です。正式な可否判断は建築指導課の審査にて行います。</div>
           <div style={{ marginTop: 2 }}>岡崎市 都市政策部 建築指導課（市役所西庁舎1F）☎ 0564-23-6253</div>
-          <div style={{ marginTop: 8, fontSize: 11, color: "#9CA3AF", fontWeight: 600 }}>Powered by <span style={{ fontWeight: 700 }}>mBiRS</span></div>
+          <div style={{ marginTop: 10, fontSize: 11, color: "var(--hig-tertiary)", fontWeight: 500 }}>Powered by <span style={{ fontWeight: 700 }}>mBiRS</span></div>
         </div>
       </div>
     </div>
