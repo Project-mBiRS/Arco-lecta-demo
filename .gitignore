@@ -1,0 +1,7 @@
+# 参照用の法令・条例PDF（リポジトリに含めない）
+reference/
+
+# OS・エディタ
+.DS_Store
+Thumbs.db
+*.swp
