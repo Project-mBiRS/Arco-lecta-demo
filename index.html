@@ -112,9 +112,12 @@ const PROVISIONS = {
   LEASE_CONSULT: { label: "賃貸・売却（窓口相談）", law: "—", color: "#64748b", icon: "🏠" },
 };
 
+const GEOMAPPAR_DOWNLOAD_URL = "https://abr.ge/gz20fw";
+
 const HOW_TO_CHECK = {
   AREA: {
     title: "区域区分の確認方法",
+    geomappar: true,
     items: [
       { icon: "💻", method: "岡崎市わが街ガイド（都市計画情報）", detail: "用途地域・市街化区域/調整区域をオンラインで24時間確認可能", url: "https://www2.wagmap.jp/okazakicity/Portal" },
       { icon: "🏛️", method: "建築指導課窓口（市役所西庁舎1F）", detail: "受付：月〜金 8:30〜17:15｜都市計画図で正確な境界を確認" },
@@ -129,6 +132,7 @@ const HOW_TO_CHECK = {
   },
   CLUSTER: {
     title: "連たん戸数の確認方法",
+    geomappar: true,
     note: "※連たん戸数はオンラインでは確認できません。窓口での確認が必要です。",
     items: [
       { icon: "🏛️", method: "建築指導課窓口（市役所西庁舎1F）", detail: "受付：月〜金 8:30〜17:15｜航空写真・都市計画図で判定" },
@@ -137,6 +141,7 @@ const HOW_TO_CHECK = {
   },
   EXISTING_LOT: {
     title: "既存宅地の確認方法",
+    geomappar: true,
     items: [
       { icon: "🏛️", method: "建築指導課窓口（市役所西庁舎1F）", detail: "受付：月〜金 8:30〜17:15｜課税台帳の地目履歴で昭和45年以前の地目を確認" },
       { icon: "💻", method: "岡崎市わが街ガイド（過年度航空写真）", detail: "昭和45年当時の土地利用状況を航空写真で参考確認", url: "https://www2.wagmap.jp/okazakicity/Portal" },
@@ -144,6 +149,7 @@ const HOW_TO_CHECK = {
   },
   NUKADA: {
     title: "額田地域・指定区域の確認方法",
+    geomappar: true,
     note: "※指定区域図はオンラインでは確認できません。窓口での確認が必要です。",
     items: [
       { icon: "🏛️", method: "建築指導課窓口（市役所西庁舎1F）", detail: "受付：月〜金 8:30〜17:15｜区域図（告示第228号）で確認" },
@@ -151,6 +157,7 @@ const HOW_TO_CHECK = {
   },
   HAZARD: {
     title: "災害ハザードエリアの確認方法",
+    geomappar: true,
     items: [
       { icon: "💻", method: "岡崎市わが街ガイド（防災情報）", detail: "急傾斜地崩壊危険箇所・土石流危険渓流・浸水想定区域を地図上で確認", url: "https://www2.wagmap.jp/okazakicity/Portal" },
       { icon: "💻", method: "愛知県マップあいち", detail: "土砂災害警戒区域・特別警戒区域の最新指定状況を確認", url: "https://maps.pref.aichi.jp/aichimapai/" },
@@ -159,6 +166,7 @@ const HOW_TO_CHECK = {
   },
   INDUSTRY_ZONE: {
     title: "産業立地誘導地区の確認方法",
+    geomappar: true,
     note: "※産業立地誘導地区はオンラインでは確認できません。窓口での確認が必要です。",
     items: [
       { icon: "🏛️", method: "建築指導課窓口（市役所西庁舎1F）", detail: "受付：月〜金 8:30〜17:15｜指定区域図で確認" },
@@ -1314,6 +1322,28 @@ const ConditionChecklist = ({ conditions, label, note }) => (
   </div>
 );
 
+const GEOMAPPAR_QR_SRC = (() => {
+  try {
+    const qr = qrcode(0, "M");
+    qr.addData(GEOMAPPAR_DOWNLOAD_URL);
+    qr.make();
+    return qr.createDataURL(4, 2);
+  } catch (e) {
+    return null;
+  }
+})();
+
+const GeoMappARDownload = () => (
+  <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 10, padding: "12px 14px", background: "#fff", borderRadius: "var(--hig-radius-sm)", border: "1px solid rgba(88,86,214,0.35)" }}>
+    <div style={{ flex: 1 }}>
+      <div style={{ fontSize: 14, fontWeight: 700, color: "#1F2937", lineHeight: 1.4 }}>📱 GeoMappAR（ジオマッパー）で地点を確認</div>
+      <div style={{ fontSize: 12, color: "#6B7280", marginTop: 2, lineHeight: 1.5 }}>建築予定地の場所をスマートフォンの地図で確かめられます。QRコードを読み取ってアプリを入手してください。最終的な判断は建築指導課の窓口でご確認ください。</div>
+      <div style={{ fontSize: 11, color: "#4338CA", marginTop: 4, wordBreak: "break-all" }}>🔗 {GEOMAPPAR_DOWNLOAD_URL}</div>
+    </div>
+    {GEOMAPPAR_QR_SRC && <img src={GEOMAPPAR_QR_SRC} alt="GeoMappARアプリのダウンロード用QRコード" style={{ width: 96, height: 96, flexShrink: 0, imageRendering: "pixelated" }} />}
+  </div>
+);
+
 const HowToCheckPanel = ({ howTo }) => {
   const data = HOW_TO_CHECK[howTo];
   if (!data) return null;
@@ -1335,11 +1365,12 @@ const HowToCheckPanel = ({ howTo }) => {
           </div>
         ))}
       </div>
+      {data.geomappar && <GeoMappARDownload />}
     </div>
   );
 };
 
-const OptionCard = ({ opt, onClick, index, totalOptions }) => {
+const OptionCard =({ opt, onClick, index, totalOptions }) => {
   const isWide = totalOptions <= 2;
   return (
     <button onClick={onClick} style={{
@@ -1380,9 +1411,7 @@ const ResultScreen = ({ step, prov, trail, dp, onBack, onRestart }) => {
     const summary = trail.map((e, i) => `${i+1}. [${e.stepLaw||""}] ${e.question}\n   → ${e.answer} ${e.law !== "—" ? "("+e.law+")" : ""}`).join("\n");
     const resultText = step.title;
     const provText = p ? `${p.law} ${p.label}` : "";
-    // TODO: GeoMappAR完成後、末尾のテキストをURLリンクに差し替え
-    // 例: `\n▼ 区域区分・接道要件の確認\nhttps://geomappar.mbirs.co.jp/okazaki`
-    return `岡崎市 開発相談ナビ 判定フロー票\n作成日: ${new Date().toLocaleDateString("ja-JP")}\n\n【判定結果】\n${resultText}\n${provText}\n\n【判定フロー】\n${summary}\n\n※本記録は参考情報です。正式な許可判断は建築指導課の審査により行われます。\n\nPowered by mBiRS\n▼ 区域区分・接道要件の確認はGeoMappARで検索`;
+    return `岡崎市 開発相談ナビ 判定フロー票\n作成日: ${new Date().toLocaleDateString("ja-JP")}\n\n【判定結果】\n${resultText}\n${provText}\n\n【判定フロー】\n${summary}\n\n※本記録は参考情報です。正式な許可判断は建築指導課の審査により行われます。\n\nPowered by mBiRS\n▼ GeoMappARアプリ\n${GEOMAPPAR_DOWNLOAD_URL}`;
   };
 
   useEffect(() => {
